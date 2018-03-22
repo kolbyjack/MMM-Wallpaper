@@ -16,13 +16,9 @@ Module.register("MMM-Wallpaper", {
 
     self.loaded = false;
     self.imageIndex = 0;
+
     self.getData();
-    setInterval(function() {
-      self.updateDom();
-      if (self.loaded) {
-        self.imageIndex = (self.imageIndex + 1) % self.images.length;
-      }
-    }, self.config.slideInterval);
+    setInterval(function() { self.getData(); }, self.config.updateInterval);
 
     window.onresize = function() {
       self.updateDom();
@@ -35,9 +31,16 @@ Module.register("MMM-Wallpaper", {
     if (notification === "WALLPAPERS") {
       if (payload.source === self.config.source && payload.orientation === self.getOrientation()) {
         self.images = payload.images.slice(0, self.config.maximumEntries);
+        self.imageIndex = self.imageIndex % self.images.length;
+
         if (!self.loaded) {
           self.loaded = true;
           self.updateDom();
+
+          setInterval(function() {
+            self.imageIndex = (self.imageIndex + 1) % self.images.length;
+            self.updateDom();
+          }, self.config.slideInterval);
         }
       }
     }
@@ -62,28 +65,12 @@ Module.register("MMM-Wallpaper", {
     return self.config.orientation;
   },
 
-  scheduleUpdate: function(delay) {
-    var self = this;
-    var timeout = self.config.updateInterval;
-
-    if (delay !== undefined && delay >= 0) {
-      timeout = delay;
-    }
-
-    setTimeout(function() { self.getData(); }, timeout);
-  },
-
   getDom: function() {
     var self = this;
     var wrapper = document.createElement("div");
 
     if (self.loaded) {
       var viewport = self.getViewport();
-
-      if (self.imageIndex >= self.images.length) {
-        self.imageIndex = 0;
-      }
-
       var data = self.images[self.imageIndex];
       var img = document.createElement("img");
 
