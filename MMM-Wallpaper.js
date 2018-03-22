@@ -7,7 +7,6 @@ Module.register("MMM-Wallpaper", {
     updateInterval: 60 * 60 * 1000,
     slideInterval: 5 * 60 * 1000,
     maximumEntries: 10,
-    market: "en-US",
     filter: "grayscale(0.5) brightness(0.5)",
     orientation: "auto"
   },
@@ -21,7 +20,7 @@ Module.register("MMM-Wallpaper", {
     setInterval(function() {
       self.updateDom();
       if (self.loaded) {
-        self.imageIndex = (self.imageIndex + 1) % self.imageList.length;
+        self.imageIndex = (self.imageIndex + 1) % self.images.length;
       }
     }, self.config.slideInterval);
 
@@ -34,10 +33,12 @@ Module.register("MMM-Wallpaper", {
     var self = this;
 
     if (notification === "WALLPAPERS") {
-      self.imageList = payload;
-      if (!self.loaded) {
-        self.loaded = true;
-        self.updateDom();
+      if (payload.source === self.config.source && payload.orientation === self.getOrientation()) {
+        self.images = payload.images.slice(0, self.config.maximumEntries);
+        if (!self.loaded) {
+          self.loaded = true;
+          self.updateDom();
+        }
       }
     }
   },
@@ -46,12 +47,19 @@ Module.register("MMM-Wallpaper", {
     var self = this;
     var config = Object.assign({}, self.config);
 
-    if (config.orientation === "auto") {
+    config.orientation = self.getOrientation();
+    self.sendSocketNotification("FETCH_WALLPAPERS", config);
+  },
+
+  getOrientation: function() {
+    var self = this;
+
+    if (self.config.orientation === "auto") {
       var viewport = self.getViewport();
-      config.orientation = (viewport.width < viewport.height) ? "vertical" : "horizontal";
+      return (viewport.width < viewport.height) ? "vertical" : "horizontal";
     }
 
-    self.sendSocketNotification("FETCH_WALLPAPERS", config);
+    return self.config.orientation;
   },
 
   scheduleUpdate: function(delay) {
@@ -72,11 +80,11 @@ Module.register("MMM-Wallpaper", {
     if (self.loaded) {
       var viewport = self.getViewport();
 
-      if (self.imageIndex >= self.imageList.length) {
+      if (self.imageIndex >= self.images.length) {
         self.imageIndex = 0;
       }
 
-      var data = self.imageList[self.imageIndex];
+      var data = self.images[self.imageIndex];
       var img = document.createElement("img");
 
       img.style.position = "fixed";
