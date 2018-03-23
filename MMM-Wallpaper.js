@@ -14,15 +14,14 @@ Module.register("MMM-Wallpaper", {
   start: function() {
     var self = this;
 
-    self.loaded = false;
+    self.image = null;
+    self.nextImage = null;
     self.imageIndex = 0;
 
     self.getData();
     setInterval(function() { self.getData(); }, self.config.updateInterval);
 
-    window.onresize = function() {
-      self.updateDom();
-    };
+    window.onresize = function() { self.updateDom(); };
   },
 
   socketNotificationReceived: function(notification, payload) {
@@ -33,12 +32,13 @@ Module.register("MMM-Wallpaper", {
         self.images = payload.images.slice(0, self.config.maximumEntries);
         self.imageIndex = self.imageIndex % self.images.length;
 
-        if (!self.loaded) {
-          self.loaded = true;
+        if (self.image === null) {
+          self.image = self.images[self.imageIndex];
           self.updateDom();
 
           setInterval(function() {
             self.imageIndex = (self.imageIndex + 1) % self.images.length;
+            self.nextImage = self.images[self.imageIndex];
             self.updateDom();
           }, self.config.slideInterval);
         }
@@ -69,18 +69,36 @@ Module.register("MMM-Wallpaper", {
     var self = this;
     var wrapper = document.createElement("div");
 
-    if (self.loaded) {
+    if (self.image !== null) {
       var viewport = self.getViewport();
-      var data = self.images[self.imageIndex];
       var img = document.createElement("img");
 
       img.style.position = "fixed";
-      img.style.top = (viewport.height - data.height) * 0.5 + "px";
-      img.style.left = (viewport.width - data.width) * 0.5 + "px";
+      img.style.top = (viewport.height - self.image.height) * 0.5 + "px";
+      img.style.left = (viewport.width - self.image.width) * 0.5 + "px";
       img.style.filter = self.config.filter;
-      img.src = data.url;
+      img.src = self.image.url;
 
       wrapper.appendChild(img);
+
+      if (self.nextImage !== null) {
+        var nextImg = document.createElement("img");
+
+        nextImg.style.position = "fixed";
+        nextImg.style.opacity = "0";
+        nextImg.style.top = (viewport.height - self.nextImage.height) * 0.5 + "px";
+        nextImg.style.left = (viewport.width - self.nextImage.width) * 0.5 + "px";
+        nextImg.style.filter = self.config.filter;
+        nextImg.src = self.nextImage.url;
+        nextImg.onload = function() {
+          nextImg.style.transition = "opacity 1s ease-in-out";
+          nextImg.style.opacity = "1";
+          self.image = self.nextImage;
+          self.nextImage = null;
+        };
+
+        wrapper.appendChild(nextImg);
+      }
     }
 
     return wrapper;
