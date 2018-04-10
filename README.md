@@ -23,9 +23,9 @@ To use this module, add it to the modules array in the `config/config.js` file:
 ````javascript
 modules: [
   {
-    module: 'MMM-Wallpaper',
-    position: 'fullscreen_below',
-    config: { // See 'Configuration options' for more information.
+    module: "MMM-Wallpaper",
+    position: "fullscreen_below",
+    config: { // See "Configuration options" for more information.
       source: "bing",
       slideInterval: 60 * 1000 // Change slides every minute
     }
