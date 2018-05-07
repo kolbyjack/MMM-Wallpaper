@@ -70,25 +70,30 @@ Module.register("MMM-Wallpaper", {
     var wrapper = document.createElement("div");
 
     if (self.image !== null) {
-      var viewport = self.getViewport();
       var img = document.createElement("img");
+      var pos = self.scaleImageToViewport(self.image);
 
       img.style.position = "fixed";
-      img.style.top = (viewport.height - self.image.height) * 0.5 + "px";
-      img.style.left = (viewport.width - self.image.width) * 0.5 + "px";
+      img.style.left = pos.left;
+      img.style.top = pos.top;
       img.style.filter = self.config.filter;
+      img.width = pos.width;
+      img.height = pos.height;
       img.src = self.image.url;
 
       wrapper.appendChild(img);
 
       if (self.nextImage !== null) {
         var nextImg = document.createElement("img");
+        var nextPos = self.scaleImageToViewport(self.nextImage);
 
         nextImg.style.position = "fixed";
         nextImg.style.opacity = "0";
-        nextImg.style.top = (viewport.height - self.nextImage.height) * 0.5 + "px";
-        nextImg.style.left = (viewport.width - self.nextImage.width) * 0.5 + "px";
+        nextImg.style.left = nextPos.left;
+        nextImg.style.top = nextPos.top;
         nextImg.style.filter = self.config.filter;
+        nextImg.width = nextPos.width;
+        nextImg.height = nextPos.height;
         nextImg.src = self.nextImage.url;
         nextImg.onload = function() {
           nextImg.style.transition = "opacity 1s ease-in-out";
@@ -113,5 +118,28 @@ Module.register("MMM-Wallpaper", {
       width: w.innerWidth || e.clientWidth || g.clientWidth,
       height: w.innerHeight || e.clientHeight || g.clientHeight
     };
-  }
+  },
+
+  scaleImageToViewport: function(image) {
+    var self = this;
+    var viewport = self.getViewport();
+    var fitVerticalWidth = image.width * viewport.height / image.height;
+    var fitHorizontalHeight = image.height * viewport.width / image.width;
+
+    if (fitVerticalWidth >= viewport.width) {
+      return {
+        top: "0px",
+        left: (viewport.width - fitVerticalWidth) * 0.5 + "px",
+        width: fitVerticalWidth,
+        height: viewport.height
+      }
+    } else {
+      return {
+        top: (viewport.height - fitHorizontalHeight) * 0.5 + "px",
+        left: "0px",
+        width: viewport.width,
+        height: fitHorizontalHeight
+      }
+    }
+  },
 });
