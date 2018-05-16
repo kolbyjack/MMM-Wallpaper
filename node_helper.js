@@ -32,12 +32,10 @@ module.exports = NodeHelper.create({
       return;
     }
 
-    if (config.source === "bing") {
-      url = "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=" + config.maximumEntries;
-    } else if (config.orientation === "vertical") {
-      url = "https://www.reddit.com/r/Verticalwallpapers/hot.json";
+    if (config.source.toLowerCase().startsWith("/r/")) {
+      url = "https://www.reddit.com" + config.source + "/hot.json";
     } else {
-      url = "https://www.reddit.com/r/wallpapers/hot.json";
+      url = "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=" + config.maximumEntries;
     }
 
     request({
@@ -73,10 +71,10 @@ module.exports = NodeHelper.create({
     var cache_key = self.getCacheKey(config);
     var images;
 
-    if (config.source === "bing") {
-      images = self.processBingData(config, data);
-    } else {
+    if (config.source.toLowerCase().startsWith("/r/")) {
       images = self.processRedditData(config, data);
+    } else {
+      images = self.processBingData(config, data);
     }
 
     if (images.length === 0) {
