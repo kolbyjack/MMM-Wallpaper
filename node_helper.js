@@ -116,7 +116,7 @@ module.exports = NodeHelper.create({
     for (var i in data.data.children) {
       var post = data.data.children[i];
 
-      if (post.kind === "t3") {
+      if (post.kind === "t3" && !post.data.pinned && !post.data.stickied) {
         var source = post.data.preview.images[0].source;
 
         images.push({
