@@ -2,6 +2,21 @@
 
 const NodeHelper = require("node_helper");
 const request = require("request");
+const fs = require("fs");
+
+function shuffle(a) {
+  var source = a.slice(0);
+  var result = [];
+  var i, j;
+
+  for (i = a.length; i > 0; --i) {
+    j = Math.floor(Math.random() * i);
+    result.push(source[j]);
+    source[j] = source[i];
+  }
+
+  return result;
+}
 
 module.exports = NodeHelper.create({
   start: function() {
@@ -9,6 +24,7 @@ module.exports = NodeHelper.create({
 
     console.log("Starting node helper for: " + self.name);
     self.cache = {};
+    self.firetv = JSON.parse(fs.readFileSync(__dirname + "/firetv.json"));
   },
 
   socketNotificationReceived: function(notification, payload) {
@@ -32,7 +48,15 @@ module.exports = NodeHelper.create({
       return;
     }
 
-    if (config.source.toLowerCase().startsWith("/r/")) {
+    var source = config.source.toLowerCase();
+    if (source === "firetv") {
+      self.sendSocketNotification("WALLPAPERS", {
+        "source": config.source,
+        "orientation": config.orientation,
+        "images": shuffle(self.firetv.images).slice(0, config.maximumEntries),
+      });
+      return;
+    } else if (source.startsWith("/r/")) {
       url = "https://www.reddit.com" + config.source + "/hot.json";
     } else {
       url = "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=" + config.maximumEntries;
