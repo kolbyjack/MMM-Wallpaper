@@ -40,7 +40,7 @@ The following properties can be configured:
 
 |Option|Default|Description|
 |---|---|---|
-|`source`|`"bing"`|The image source to use.  Currently "bing" and "reddit" are supported.|
+|`source`|`"bing"`|The image source to use.  Currently "bing", "firetv", and "/r/&lt;subreddit&gt;" are supported.|
 |`updateInterval`|`60 * 60 * 1000`|How often (in ms) to check the source for new wallpapers.|
 |`slideInterval`|`5 * 60 * 1000`|How often (in ms) to change images.|
 |`maximumEntries`|`10`|The maximum number of images to switch between from the source.|
