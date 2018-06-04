@@ -1,0 +1,17 @@
+.MMM-Wallpaper .wallpaper {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%);
+}
+
+.MMM-Wallpaper .tall {
+  width: 100%;
+  height: auto;
+}
+
+.MMM-Wallpaper .wide {
+  width: auto;
+  height: 100%;
+}
+

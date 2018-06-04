@@ -11,6 +11,10 @@ Module.register("MMM-Wallpaper", {
     orientation: "auto"
   },
 
+  getStyles: function() {
+    return ["MMM-Wallpaper.css"];
+  },
+
   start: function() {
     var self = this;
 
@@ -71,29 +75,18 @@ Module.register("MMM-Wallpaper", {
 
     if (self.image !== null) {
       var img = document.createElement("img");
-      var pos = self.scaleImageToViewport(self.image);
 
-      img.style.position = "fixed";
-      img.style.left = pos.left;
-      img.style.top = pos.top;
+      img.className = "wallpaper " + self.getWallpaperFitType(self.image);
       img.style.filter = self.config.filter;
-      img.width = pos.width;
-      img.height = pos.height;
       img.src = self.image.url;
 
       wrapper.appendChild(img);
 
       if (self.nextImage !== null) {
         var nextImg = document.createElement("img");
-        var nextPos = self.scaleImageToViewport(self.nextImage);
 
-        nextImg.style.position = "fixed";
-        nextImg.style.opacity = "0";
-        nextImg.style.left = nextPos.left;
-        nextImg.style.top = nextPos.top;
+        nextImg.className = "wallpaper " + self.getWallpaperFitType(self.nextImage);
         nextImg.style.filter = self.config.filter;
-        nextImg.width = nextPos.width;
-        nextImg.height = nextPos.height;
         nextImg.src = self.nextImage.url;
         nextImg.onload = function() {
           nextImg.style.transition = "opacity 1s ease-in-out";
@@ -120,26 +113,16 @@ Module.register("MMM-Wallpaper", {
     };
   },
 
-  scaleImageToViewport: function(image) {
+  getWallpaperFitType: function(image) {
     var self = this;
     var viewport = self.getViewport();
     var fitVerticalWidth = image.width * viewport.height / image.height;
     var fitHorizontalHeight = image.height * viewport.width / image.width;
 
     if (fitVerticalWidth >= viewport.width) {
-      return {
-        top: "0px",
-        left: (viewport.width - fitVerticalWidth) * 0.5 + "px",
-        width: fitVerticalWidth,
-        height: viewport.height
-      }
+      return "wide";
     } else {
-      return {
-        top: (viewport.height - fitHorizontalHeight) * 0.5 + "px",
-        left: "0px",
-        width: viewport.width,
-        height: fitHorizontalHeight
-      }
+      return "tall";
     }
   },
 });
