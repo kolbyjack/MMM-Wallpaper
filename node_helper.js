@@ -127,7 +127,7 @@ module.exports = NodeHelper.create({
         url: "https://www.bing.com" + image.urlbase + suffix,
         width: width,
         height: height,
-        name: image.copyright,
+        caption: image.copyright,
       });
     }
 

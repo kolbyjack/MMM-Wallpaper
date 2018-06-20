@@ -16,17 +16,11 @@
 }
 
 .MMM-Wallpaper .title {
-	text-align: right;
-	position: absolute;
-	left: 50px;
-	top: calc(100% - 60px);
+  position: absolute;
+  right: 25px;
+  bottom: 25px;
   font-family: Roboto, sans-serif;
   font-weight: 100;
-	font-size: 14px;
-	line-height: 25px;
-/*   -webkit-text-stroke-width: 1pt;
-   -webkit-text-stroke-color: black;
-*/}
-
-
-
+  font-size: 14px;
+  line-height: 25px;
+}

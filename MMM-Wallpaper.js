@@ -30,7 +30,7 @@ Module.register("MMM-Wallpaper", {
 
   socketNotificationReceived: function(notification, payload) {
     var self = this;
-    
+
     if (notification === "WALLPAPERS") {
       if (payload.source === self.config.source && payload.orientation === self.getOrientation()) {
         self.images = payload.images.slice(0, self.config.maximumEntries);
@@ -75,29 +75,21 @@ Module.register("MMM-Wallpaper", {
 
     if (self.image !== null) {
       var img = document.createElement("img");
+      var caption = self.image.caption;
 
       img.className = "wallpaper " + self.getWallpaperFitType(self.image);
       img.style.filter = self.config.filter;
       img.src = self.image.url;
 
-      var title = document.createElement("div");
-      title.innerHTML = self.image.name;
-      title.classList.add("title");
-
       wrapper.appendChild(img);
-      wrapper.appendChild(title);
-      
-      // console.log(this);
-      
+
       if (self.nextImage !== null) {
         var nextImg = document.createElement("img");
 
-        console.log(self.nextImage);
-
+        caption = self.nextImage.caption;
         nextImg.className = "wallpaper " + self.getWallpaperFitType(self.nextImage);
         nextImg.style.filter = self.config.filter;
         nextImg.src = self.nextImage.url;
-        nextImg.name = self.nextImage.name;
         nextImg.onload = function() {
           nextImg.style.transition = "opacity 1s ease-in-out";
           nextImg.style.opacity = "1";
@@ -105,11 +97,15 @@ Module.register("MMM-Wallpaper", {
           self.nextImage = null;
         };
 
+        wrapper.appendChild(nextImg);
+      }
+
+      if (caption) {
         var title = document.createElement("div");
-        title.innerHTML = nextImg.name;
+
+        title.innerHTML = caption;
         title.classList.add("title");
 
-        wrapper.appendChild(nextImg);
         wrapper.appendChild(title);
       }
     }
