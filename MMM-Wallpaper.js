@@ -75,6 +75,7 @@ Module.register("MMM-Wallpaper", {
 
     if (self.image !== null) {
       var img = document.createElement("img");
+      var caption = self.image.caption;
 
       img.className = "wallpaper " + self.getWallpaperFitType(self.image);
       img.style.filter = self.config.filter;
@@ -85,6 +86,7 @@ Module.register("MMM-Wallpaper", {
       if (self.nextImage !== null) {
         var nextImg = document.createElement("img");
 
+        caption = self.nextImage.caption;
         nextImg.className = "wallpaper " + self.getWallpaperFitType(self.nextImage);
         nextImg.style.filter = self.config.filter;
         nextImg.src = self.nextImage.url;
@@ -96,6 +98,15 @@ Module.register("MMM-Wallpaper", {
         };
 
         wrapper.appendChild(nextImg);
+      }
+
+      if (caption) {
+        var title = document.createElement("div");
+
+        title.innerHTML = caption;
+        title.classList.add("title");
+
+        wrapper.appendChild(title);
       }
     }
 

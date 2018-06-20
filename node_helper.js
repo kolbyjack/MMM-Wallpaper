@@ -126,7 +126,8 @@ module.exports = NodeHelper.create({
       images.push({
         url: "https://www.bing.com" + image.urlbase + suffix,
         width: width,
-        height: height
+        height: height,
+        caption: image.copyright,
       });
     }
 
