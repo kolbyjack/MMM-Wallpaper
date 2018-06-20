@@ -8,7 +8,8 @@ Module.register("MMM-Wallpaper", {
     slideInterval: 5 * 60 * 1000,
     maximumEntries: 10,
     filter: "grayscale(0.5) brightness(0.5)",
-    orientation: "auto"
+    orientation: "auto",
+    caption: true,
   },
 
   getStyles: function() {
@@ -100,7 +101,7 @@ Module.register("MMM-Wallpaper", {
         wrapper.appendChild(nextImg);
       }
 
-      if (caption) {
+      if (self.config.caption && caption) {
         var title = document.createElement("div");
 
         title.innerHTML = caption;
