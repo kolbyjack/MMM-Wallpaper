@@ -147,7 +147,8 @@ module.exports = NodeHelper.create({
         images.push({
           url: source.url.replace("&amp;", "&"),
           width: source.width,
-          height: source.height
+          height: source.height,
+          caption: post.data.title,
         });
 
         if (images.length === config.maximumEntries) {
