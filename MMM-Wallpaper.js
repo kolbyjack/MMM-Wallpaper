@@ -29,6 +29,10 @@ Module.register("MMM-Wallpaper", {
     window.onresize = function() { self.updateDom(); };
   },
 
+  notificationReceived: function(notification, payload, sender) {
+    // Do nothing
+  },
+
   socketNotificationReceived: function(notification, payload) {
     var self = this;
 
