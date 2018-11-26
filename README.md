@@ -1,5 +1,5 @@
 # Module: MMM-Wallpaper
-The module allows you to add wallpapers from bing or reddit.  Useful for MagicMirror installations that aren't actually mirrors.
+The module allows you to add wallpapers from various online sources.  Useful for MagicMirror installations that aren't actually mirrors.
 
 ## Installation
 
@@ -40,7 +40,11 @@ The following properties can be configured:
 
 |Option|Default|Description|
 |---|---|---|
-|`source`|`"bing"`|The image source to use.  Currently "bing", "firetv", and "/r/&lt;subreddit&gt;" are supported.|
+|`source`|`"bing"`|The image source to use.  Supported sources:
+- "bing": cycles through the most recent daily wallpapers from Bing
+- "firetv": cycles through random selections of the FireTV wallpapers
+- "/r/&lt;subreddit&gt;": cycles through the most recent "hot" image posts from the subreddit
+- "icloud:&lt;album id&gt;": cycles through random selections of the specified album|
 |`updateInterval`|`60 * 60 * 1000`|How often (in ms) to check the source for new wallpapers.|
 |`slideInterval`|`5 * 60 * 1000`|How often (in ms) to change images.|
 |`maximumEntries`|`10`|The maximum number of images to switch between from the source.|
