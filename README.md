@@ -40,11 +40,7 @@ The following properties can be configured:
 
 |Option|Default|Description|
 |---|---|---|
-|`source`|`"bing"`|The image source to use.  Supported sources:
-- "bing": cycles through the most recent daily wallpapers from Bing
-- "firetv": cycles through random selections of the FireTV wallpapers
-- "/r/&lt;subreddit&gt;": cycles through the most recent "hot" image posts from the subreddit
-- "icloud:&lt;album id&gt;": cycles through random selections of the specified album|
+|`source`|`"bing"`|The image source to use.  Supported sources:<br/>&nbsp;- "bing": cycles through the most recent daily wallpapers from Bing<br/>&nbsp;- "firetv": cycles through random selections of the FireTV wallpapers<br/>&nbsp;- "/r/&lt;subreddit&gt;": cycles through the most recent "hot" image posts from the subreddit<br/>&nbsp;- "icloud:&lt;album id&gt;": cycles through random selections of the specified album|
 |`updateInterval`|`60 * 60 * 1000`|How often (in ms) to check the source for new wallpapers.|
 |`slideInterval`|`5 * 60 * 1000`|How often (in ms) to change images.|
 |`maximumEntries`|`10`|The maximum number of images to switch between from the source.|
