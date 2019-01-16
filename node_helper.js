@@ -65,6 +65,12 @@ module.exports = NodeHelper.create({
       url = "https://p04-sharedstreams.icloud.com/" + config.source.substring(7) + "/sharedstreams/webstream";
       body = '{"streamCtag":null}';
       self.iCloudState = "webstream";
+    } else if (source.startsWith("flickr-group:")) {
+      url = "https://api.flickr.com/services/feeds/groups_pool.gne?format=json&id=" + config.source.substring(13);
+    } else if (source.startsWith("flickr-user:")) {
+      url = "https://api.flickr.com/services/feeds/photos_public.gne?format=json&id=" + config.source.substring(12);
+    } else if (source.startsWith("flickr-user-faves:")) {
+      url = "https://api.flickr.com/services/feeds/photos_faves.gne?format=json&id=" + config.source.substring(18);
     } else {
       url = "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=" + config.maximumEntries;
     }
@@ -88,7 +94,7 @@ module.exports = NodeHelper.create({
       }
 
       if (response.statusCode < 400 && body.length > 0) {
-        self.processResponse(response, JSON.parse(body), config);
+        self.processResponse(response, body, config);
       }
     });
   },
@@ -111,11 +117,13 @@ module.exports = NodeHelper.create({
 
     var source = config.source.toLowerCase();
     if (source.startsWith("/r/")) {
-      images = self.processRedditData(config, body);
+      images = self.processRedditData(config, JSON.parse(body));
     } else if (source.startsWith("icloud:")) {
-      images = self.processiCloudData(response, body, config);
+      images = self.processiCloudData(response, JSON.parse(body), config);
+    } else if (source.startsWith("flickr-")) {
+      images = self.processFlickrData(config, body);
     } else {
-      images = self.processBingData(config, body);
+      images = self.processBingData(config, JSON.parse(body));
     }
 
     if (images.length === 0) {
@@ -216,6 +224,27 @@ module.exports = NodeHelper.create({
           url: loc.scheme + "://" + host + p.url_path,
           caption: meta.caption,
         });
+      }
+    }
+
+    return images;
+  },
+
+  processFlickrData: function(config, body) {
+    var self = this;
+    var data = JSON.parse(body.replace(/^[^{]*/, "").replace(/[^}]*$/, ""));
+
+    var images = [];
+    for (var i in data.items) {
+      var post = data.items[i];
+
+      images.push({
+        url: post.media.m.replace(/_m\./, "_h."),
+        caption: post.title,
+      });
+
+      if (images.length === config.maximumEntries) {
+        break;
       }
     }
 
