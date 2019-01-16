@@ -142,8 +142,6 @@ module.exports = NodeHelper.create({
 
       images.push({
         url: "https://www.bing.com" + image.urlbase + suffix,
-        width: width,
-        height: height,
         caption: image.copyright,
       });
     }
@@ -163,8 +161,6 @@ module.exports = NodeHelper.create({
 
         images.push({
           url: source.url.replace("&amp;", "&"),
-          width: source.width,
-          height: source.height,
           caption: post.data.title,
         });
 
@@ -200,8 +196,6 @@ module.exports = NodeHelper.create({
             var meta = p.derivatives[d];
 
             o[meta.checksum] = {
-              width: meta.width,
-              height: meta.height,
               caption: p.caption
             };
           }
@@ -220,8 +214,6 @@ module.exports = NodeHelper.create({
 
         images.push({
           url: loc.scheme + "://" + host + p.url_path,
-          width: meta.width,
-          height: meta.height,
           caption: meta.caption,
         });
       }

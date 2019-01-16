@@ -82,9 +82,11 @@ Module.register("MMM-Wallpaper", {
       var img = document.createElement("img");
       var caption = self.image.caption;
 
-      img.className = "wallpaper " + self.getWallpaperFitType(self.image);
       img.style.filter = self.config.filter;
       img.src = self.image.url;
+      img.onload = function() {
+        img.className = self.getWallpaperClasses(img);
+      };
 
       wrapper.appendChild(img);
 
@@ -92,10 +94,10 @@ Module.register("MMM-Wallpaper", {
         var nextImg = document.createElement("img");
 
         caption = self.nextImage.caption;
-        nextImg.className = "wallpaper " + self.getWallpaperFitType(self.nextImage);
         nextImg.style.filter = self.config.filter;
         nextImg.src = self.nextImage.url;
         nextImg.onload = function() {
+          nextImg.className = self.getWallpaperClasses(nextImg);
           nextImg.style.transition = "opacity 1s ease-in-out";
           nextImg.style.opacity = "1";
           self.image = self.nextImage;
@@ -129,16 +131,15 @@ Module.register("MMM-Wallpaper", {
     };
   },
 
-  getWallpaperFitType: function(image) {
+  getWallpaperClasses: function(image) {
     var self = this;
     var viewport = self.getViewport();
-    var fitVerticalWidth = image.width * viewport.height / image.height;
-    var fitHorizontalHeight = image.height * viewport.width / image.width;
+    var fitVerticalWidth = image.naturalWidth * viewport.height / image.naturalHeight;
 
     if (fitVerticalWidth >= viewport.width) {
-      return "wide";
+      return "wallpaper wide";
     } else {
-      return "tall";
+      return "wallpaper tall";
     }
   },
 });
