@@ -59,44 +59,61 @@ module.exports = NodeHelper.create({
       });
       return;
     } else if (source.startsWith("/r/")) {
-      url = "https://www.reddit.com" + config.source + "/hot.json";
+      self.request(config, {
+        url: "https://www.reddit.com" + config.source + "/hot.json",
+        headers: {
+          "user-agent": "MagicMirror:MMM-Wallpaper:v1.0 (by /u/kolbyhack)"
+        },
+      });
     } else if (source.startsWith("icloud:")) {
-      method = "POST";
-      url = "https://p04-sharedstreams.icloud.com/" + config.source.substring(7) + "/sharedstreams/webstream";
-      body = '{"streamCtag":null}';
       self.iCloudState = "webstream";
+      self.request(config, {
+        method: "POST",
+        url: "https://p04-sharedstreams.icloud.com/" + config.source.substring(7) + "/sharedstreams/webstream",
+        body: '{"streamCtag":null}',
+      });
     } else if (source.startsWith("flickr-group:")) {
-      url = "https://api.flickr.com/services/feeds/groups_pool.gne?format=json&id=" + config.source.substring(13);
+      self.request(config, {
+        url: "https://api.flickr.com/services/feeds/groups_pool.gne?format=json&id=" + config.source.substring(13),
+      });
     } else if (source.startsWith("flickr-user:")) {
-      url = "https://api.flickr.com/services/feeds/photos_public.gne?format=json&id=" + config.source.substring(12);
+      self.request(config, {
+        url: "https://api.flickr.com/services/feeds/photos_public.gne?format=json&id=" + config.source.substring(12),
+      });
     } else if (source.startsWith("flickr-user-faves:")) {
-      url = "https://api.flickr.com/services/feeds/photos_faves.gne?format=json&id=" + config.source.substring(18);
+      self.request(config, {
+        url: "https://api.flickr.com/services/feeds/photos_faves.gne?format=json&id=" + config.source.substring(18),
+      });
     } else {
-      url = "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=" + config.maximumEntries;
+      self.request(config, {
+        url: "https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=" + config.maximumEntries,
+      });
     }
-
-    self.request(method, url, body, config);
   },
 
-  request: function(method, url, body, config) {
+  request: function(config, params) {
     var self = this;
 
-    request({
-      url: url,
-      method: method,
-      headers: { "cache-control": "no-cache" },
-      body: body,
-    },
-    function(error, response, body) {
-      if (error) {
-        self.sendSocketNotification("FETCH_ERROR", { error: error });
-        return console.error(" ERROR - MMM-Wallpaper: " + error);
-      }
+    if (!("headers" in params)) {
+      params.headers = {};
+    }
 
-      if (response.statusCode < 400 && body.length > 0) {
-        self.processResponse(response, body, config);
+    if (!("cache-control" in params.headers)) {
+      params.headers["cache-control"] = "no-cache";
+    }
+
+    request(params,
+      function(error, response, body) {
+        if (error) {
+          self.sendSocketNotification("FETCH_ERROR", { error: error });
+          return console.error(" ERROR - MMM-Wallpaper: " + error);
+        }
+
+        if (response.statusCode < 400 && body.length > 0) {
+          self.processResponse(response, body, config);
+        }
       }
-    });
+    );
   },
 
   sendWallpaperUpdate: function(config) {
@@ -165,10 +182,10 @@ module.exports = NodeHelper.create({
       var post = data.data.children[i];
 
       if (post.kind === "t3" && !post.data.pinned && !post.data.stickied && post.data.post_hint === "image") {
-        var source = post.data.url;
+        var source = post.data.url.replace("&amp;", "&");
 
         images.push({
-          url: source.url.replace("&amp;", "&"),
+          url: source,
           caption: post.data.title,
         });
 
@@ -189,7 +206,11 @@ module.exports = NodeHelper.create({
     if (self.iCloudState === "webstream") {
       if (response.statusCode === 330) {
         self.iCloudHost = body["X-Apple-MMe-Host"];
-        self.request("POST", "https://" + self.iCloudHost + "/" + album + "/sharedstreams/webstream", '{"streamCtag":null}', config);
+        self.request(config, {
+          method: "POST",
+          url: "https://" + self.iCloudHost + "/" + album + "/sharedstreams/webstream",
+          body: '{"streamCtag":null}'
+        });
       } else if (response.statusCode === 200) {
         var photos = shuffle(body.photos).slice(0, config.maximumEntries);
         var photoGuids = photos.map((p) => { return p.photoGuid; });
@@ -211,7 +232,11 @@ module.exports = NodeHelper.create({
           return o
         }, {});
 
-        self.request("POST", "https://" + self.iCloudHost + "/" + album + "/sharedstreams/webasseturls", JSON.stringify({"photoGuids": photoGuids}), config);
+        self.request(config, {
+          mthod: "POST",
+          url: "https://" + self.iCloudHost + "/" + album + "/sharedstreams/webasseturls",
+          body: JSON.stringify({"photoGuids": photoGuids}),
+        });
       }
     } else if (self.iCloudState === "webasseturls") {
       for (var guid in body.items) {
