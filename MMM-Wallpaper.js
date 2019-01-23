@@ -10,6 +10,7 @@ Module.register("MMM-Wallpaper", {
     filter: "grayscale(0.5) brightness(0.5)",
     orientation: "auto",
     caption: true,
+    crossfade: true,
   },
 
   getStyles: function() {
@@ -39,9 +40,9 @@ Module.register("MMM-Wallpaper", {
     if (notification === "WALLPAPERS") {
       if (payload.source === self.config.source && payload.orientation === self.getOrientation()) {
         self.images = payload.images.slice(0, self.config.maximumEntries);
-        self.imageIndex = self.imageIndex % self.images.length;
+        self.imageIndex = self.imageIndex % (self.images.length || 1);
 
-        if (self.image === null) {
+        if (self.image === null && self.images.length > 0) {
           self.image = self.images[self.imageIndex];
           self.updateDom();
 
@@ -86,6 +87,7 @@ Module.register("MMM-Wallpaper", {
       img.src = self.image.url;
       img.onload = function() {
         img.className = self.getWallpaperClasses(img);
+        setTimeout(function() { img.onload = null; }, 15000);
       };
 
       wrapper.appendChild(img);
@@ -98,10 +100,13 @@ Module.register("MMM-Wallpaper", {
         nextImg.src = self.nextImage.url;
         nextImg.onload = function() {
           nextImg.className = self.getWallpaperClasses(nextImg);
-          nextImg.style.transition = "opacity 1s ease-in-out";
-          nextImg.style.opacity = "1";
+          if (self.config.crossfade) {
+            nextImg.style.transition = "opacity 1s ease-in-out";
+            nextImg.style.opacity = "1";
+          }
           self.image = self.nextImage;
           self.nextImage = null;
+          setTimeout(function() { nextImg.onload = null; }, 15000);
         };
 
         wrapper.appendChild(nextImg);
