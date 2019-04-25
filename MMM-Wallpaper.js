@@ -84,7 +84,7 @@ Module.register("MMM-Wallpaper", {
       var caption = self.image.caption;
 
       img.style.filter = self.config.filter;
-      img.src = self.image.url;
+      img.src = self.getImageUrl(self.image);
       img.onload = function() {
         img.className = self.getWallpaperClasses(img);
         setTimeout(function() { img.onload = null; }, 15000);
@@ -97,7 +97,7 @@ Module.register("MMM-Wallpaper", {
 
         caption = self.nextImage.caption;
         nextImg.style.filter = self.config.filter;
-        nextImg.src = self.nextImage.url;
+        nextImg.src = self.getImageUrl(self.nextImage);
         nextImg.onload = function() {
           nextImg.className = self.getWallpaperClasses(nextImg);
           if (self.config.crossfade) {
@@ -146,5 +146,28 @@ Module.register("MMM-Wallpaper", {
     } else {
       return "wallpaper tall";
     }
+  },
+
+  getImageUrl: function(image) {
+    var viewport = this.getViewport();
+    var url = image.url;
+    var bestWidth = Number.MAX_SAFE_INTEGER;
+    var bestHeight = bestWidth;
+
+    if ("variants" in image) {
+      for (var i in image.variants) {
+        var variant = image.variants[i];
+
+        if (variant.width >= viewport.width && variant.width < bestWidth &&
+            variant.height >= viewport.height && variant.height < bestHeight)
+        {
+          url = variant.url;
+          bestWidth = variant.width;
+          bestHeight = variant.height;
+        }
+      }
+    }
+
+    return url;
   },
 });

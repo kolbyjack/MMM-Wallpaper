@@ -194,9 +194,15 @@ module.exports = NodeHelper.create({
       var post = data.data.children[i];
 
       if (post.kind === "t3" && !post.data.pinned && !post.data.stickied && post.data.post_hint === "image") {
+        var variants = post.data.preview.images[0].resolutions.slice(0);
+
+        variants.push(post.data.preview.images[0].source);
+        variants.map((v) => { v.url = v.url.split("&amp;").join("&"); return v; });
+
         images.push({
           url: post.data.url.replace("&amp;", "&"),
           caption: post.data.title,
+          variants: variants,
         });
 
         if (images.length === config.maximumEntries) {
