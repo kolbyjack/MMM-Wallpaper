@@ -11,6 +11,8 @@ Module.register("MMM-Wallpaper", {
     orientation: "auto",
     caption: true,
     crossfade: true,
+    maxWidth: Number.MAX_SAFE_INTEGER,
+    maxHeight: Number.MAX_SAFE_INTEGER,
   },
 
   getStyles: function() {
@@ -151,19 +153,19 @@ Module.register("MMM-Wallpaper", {
   getImageUrl: function(image) {
     var viewport = this.getViewport();
     var url = image.url;
-    var bestWidth = Number.MAX_SAFE_INTEGER;
-    var bestHeight = bestWidth;
 
     if ("variants" in image) {
       for (var i in image.variants) {
         var variant = image.variants[i];
 
-        if (variant.width >= viewport.width && variant.width < bestWidth &&
-            variant.height >= viewport.height && variant.height < bestHeight)
-        {
-          url = variant.url;
-          bestWidth = variant.width;
-          bestHeight = variant.height;
+        if (variant.width > this.config.maxWidth || variant.height > this.config.maxHeight) {
+          break;
+        }
+
+        url = variant.url;
+
+        if (variant.width >= viewport.width && variant.height >= viewport.height) {
+          break;
         }
       }
     }

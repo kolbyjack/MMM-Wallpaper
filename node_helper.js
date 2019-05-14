@@ -198,6 +198,7 @@ module.exports = NodeHelper.create({
 
         variants.push(post.data.preview.images[0].source);
         variants.map((v) => { v.url = v.url.split("&amp;").join("&"); return v; });
+        variants.sort((a, b) => { return a.width * a.height - b.width * b.height; });
 
         images.push({
           url: post.data.url.replace("&amp;", "&"),
