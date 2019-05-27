@@ -1,6 +1,6 @@
 // MMM-Wallpaper.js
 
-Module.register("MMM-Wallpaper", {
+Module.register("MMM-Wallpaper-np-dash", {
   // Default module config
   defaults: {
     source: "bing",
