@@ -77,6 +77,13 @@ module.exports = NodeHelper.create({
           "user-agent": "MagicMirror:MMM-Wallpaper:v1.0 (by /u/kolbyhack)"
         },
       });
+    } else if (source === "pexels") {
+      self.request(config, {
+        url: "https://api.pexels.com/v1/search?query=" + config.pexels_search,
+        headers: {
+          Authorization: config.pexels_key
+        },
+      });
     } else if (source.startsWith("icloud:")) {
       self.iCloudState = "webstream";
       self.request(config, {
@@ -151,6 +158,8 @@ module.exports = NodeHelper.create({
       images = self.processiCloudData(response, JSON.parse(body), config);
     } else if (source.startsWith("flickr-")) {
       images = self.processFlickrData(config, body);
+    } else if (source === "pexels") {
+      images = self.processPexelsData(config, JSON.parse(body));
     } else {
       images = self.processBingData(config, JSON.parse(body));
     }
@@ -165,6 +174,32 @@ module.exports = NodeHelper.create({
     };
 
     self.sendWallpaperUpdate(config);
+  },
+
+  processPexelsData: function (config, data) {
+    var self = this;
+    var width = (config.orientation === "vertical") ? 1080 : 1920;
+    var height = (config.orientation === "vertical") ? 1920 : 1080;
+    var suffix = "_" + width + "x" + height + ".jpg";
+    var orientation
+
+    if (config.orientation === "vertical") {
+      orientation = "portrait"
+    } else {
+      orientation = "landscape"
+    }
+
+    var images = [];
+    for (var i in data.photos) {
+      var image = data.photos[i];
+
+      images.push({
+        url: image.src[orientation],
+        caption: "Photographer:" + image.photographer,
+      });
+    }
+
+    return images;
   },
 
   processBingData: function(config, data) {
