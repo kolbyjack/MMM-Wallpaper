@@ -264,7 +264,7 @@ module.exports = NodeHelper.create({
           body: '{"streamCtag":null}'
         });
       } else if (response.statusCode === 200) {
-        var photos = shuffle(body.photos).slice(0, config.maximumEntries);
+        var photos = shuffle(body.photos).filter((p) => p != null).slice(0, config.maximumEntries);
         var photoGuids = photos.map((p) => { return p.photoGuid; });
 
         self.iCloudState = "webasseturls";
@@ -285,7 +285,7 @@ module.exports = NodeHelper.create({
         }, {});
 
         self.request(config, {
-          mthod: "POST",
+          method: "POST",
           url: fmt("https://{}/{}/sharedstreams/webasseturls", self.iCloudHost, album),
           body: JSON.stringify({"photoGuids": photoGuids}),
         });
