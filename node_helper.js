@@ -62,7 +62,19 @@ module.exports = NodeHelper.create({
       return;
     }
 
-    var source = config.source.toLowerCase();
+    //  check if the source is not an array of strings.
+    var isArray = Array.isArray(config.source);
+    var source;
+    if (isArray){
+      // select a random source
+      var size = config.source.length;
+      var index_to_select = Math.floor((Math.random() * size));
+      source = config.source[index_to_select].toLowerCase();
+    }
+    else {
+      // only one source => default behaviour
+      source = config.source.toLowerCase();
+    }
     if (source === "firetv") {
       self.sendSocketNotification("WALLPAPERS", {
         "source": config.source,
