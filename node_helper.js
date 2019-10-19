@@ -18,6 +18,14 @@ function shuffle(a) {
   return result;
 }
 
+function pick(a) {
+  if (Array.isArray(a)) {
+    return a[Math.floor(Math.random() * a.length)];
+  } else {
+    return a;
+  }
+}
+
 function fmt(f) {
     var parts = f.split("{}");
     var result = parts[0];
@@ -62,6 +70,7 @@ module.exports = NodeHelper.create({
       return;
     }
 
+    config.source = pick(config.source);
     var source = config.source.toLowerCase();
     if (source === "firetv") {
       self.sendSocketNotification("WALLPAPERS", {

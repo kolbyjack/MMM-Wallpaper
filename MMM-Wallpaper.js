@@ -40,7 +40,10 @@ Module.register("MMM-Wallpaper", {
     var self = this;
 
     if (notification === "WALLPAPERS") {
-      if (payload.source === self.config.source && payload.orientation === self.getOrientation()) {
+      if (payload.orientation === self.getOrientation() &&
+          ((Array.isArray(self.config.source) && self.config.source.includes(payload.source)) ||
+           (!Array.isArray(self.config.source) && self.config.source === payload.source)))
+      {
         self.images = payload.images.slice(0, self.config.maximumEntries);
         self.imageIndex = self.imageIndex % (self.images.length || 1);
 
