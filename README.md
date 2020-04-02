@@ -8,15 +8,9 @@ In your terminal, go to your MagicMirror's Module folder:
 cd ~/MagicMirror/modules
 ````
 
-Clone this repository:
+Clone this repository (with Chromecast functionality):
 ````
-git clone https://github.com/kolbyjack/MMM-Wallpaper.git
-````
-
-Add the Chromecast functionality:
-````
-Download & copy the 'chromecast.json' file into the new folder
-Download & overwrite 'node_helper.js' file into the new folder
+git clone https://github.com/TheLukaBoss/MMM-Wallpaper-WithChromecastImages.git
 ````
 
 Configure the module in your `config.js` file.
