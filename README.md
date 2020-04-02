@@ -13,6 +13,12 @@ Clone this repository:
 git clone https://github.com/kolbyjack/MMM-Wallpaper.git
 ````
 
+Add the Chromecast functionality:
+````
+Download & copy the 'chromecast.json' file into the new folder
+Download & overwrite 'node_helper.js' file into the new folder
+````
+
 Configure the module in your `config.js` file.
 
 **Note:** After starting the Mirror, it will take a few seconds before the wallpapers start to appear.
