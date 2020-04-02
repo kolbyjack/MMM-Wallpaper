@@ -26,7 +26,7 @@ modules: [
     module: "MMM-Wallpaper",
     position: "fullscreen_below",
     config: { // See "Configuration options" for more information.
-      source: "bing",
+      source: "chromecast",
       slideInterval: 60 * 1000 // Change slides every minute
     }
   }
@@ -40,7 +40,7 @@ The following properties can be configured:
 
 |Option|Default|Description|
 |---|---|---|
-|`source`|`"bing"`|The image source to use.  Supported sources:<br/>&nbsp;- "bing": cycles through the most recent daily wallpapers from Bing<br/>&nbsp;- "firetv": cycles through random selections of the FireTV wallpapers<br/>&nbsp;- "/r/&lt;subreddit&gt;": cycles through the most recent "hot" image posts from the subreddit<br/>&nbsp;- "icloud:&lt;album id&gt;": cycles through random selections of the specified album|
+|`source`|`"bing"`|The image source to use.  Supported sources:<br/>&nbsp;- "bing": cycles through the most recent daily wallpapers from Bing<br/>&nbsp;- "firetv": cycles through random selections of the FireTV wallpapers<br/>&nbsp;- "/r/&lt;subreddit&gt;": cycles through the most recent "hot" image posts from the subreddit<br/>&nbsp;- "icloud:&lt;album id&gt;": cycles through random selections of the specified album<br/>&nbsp;- **"chromecast": added in this fork, please read this repo's description: cycles through random images listed in chromecast.json**|
 |`updateInterval`|`60 * 60 * 1000`|How often (in ms) to check the source for new wallpapers.|
 |`slideInterval`|`5 * 60 * 1000`|How often (in ms) to change images.|
 |`maximumEntries`|`10`|The maximum number of images to switch between from the source.|
