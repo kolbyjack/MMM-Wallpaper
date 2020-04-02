@@ -45,6 +45,7 @@ module.exports = NodeHelper.create({
     console.log(fmt("Starting node helper for: {}", self.name));
     self.cache = {};
     self.firetv = JSON.parse(fs.readFileSync(fmt("{}/firetv.json", __dirname)));
+    self.chromecast = JSON.parse(fs.readFileSync(fmt("{}/chromecast.json", __dirname)));
   },
 
   socketNotificationReceived: function(notification, payload) {
@@ -77,6 +78,13 @@ module.exports = NodeHelper.create({
         "source": config.source,
         "orientation": config.orientation,
         "images": shuffle(self.firetv.images).slice(0, config.maximumEntries),
+      });
+      return;
+    } else if (source === "chromecast") {
+      self.sendSocketNotification("WALLPAPERS", {
+        "source": config.source,
+        "orientation": config.orientation,
+        "images": shuffle(self.chromecast).slice(0, config.maximumEntries),
       });
       return;
     } else if (source.startsWith("/r/")) {
