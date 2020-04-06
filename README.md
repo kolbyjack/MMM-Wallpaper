@@ -40,10 +40,10 @@ The following properties can be configured:
 
 |Option|Default|Description|
 |---|---|---|
-|`source`|`"bing"`|The image source to use.  Supported sources:<br/>&nbsp;- "bing": cycles through the most recent daily wallpapers from Bing<br/>&nbsp;- "chromecast": cycles through random selections of the Chromecast wallpapers (thanks TheLukaBoss)<br/>&nbsp;- "firetv": cycles through random selections of the FireTV wallpapers<br/>&nbsp;- "/r/&lt;subreddit&gt;": cycles through the most recent "hot" image posts from the subreddit<br/>&nbsp;- "icloud:&lt;album id&gt;": cycles through random selections of the specified album|
+|`source`|`"bing"`|The image source(s) to use.  Can either be a string for a single source, or an array of sources, where one will be selected at random for each updateInterval.  Supported sources:<br/>&nbsp;- "bing": cycles through the most recent daily wallpapers from Bing<br/>&nbsp;- "chromecast": cycles through random selections of the Chromecast wallpapers (thanks TheLukaBoss)<br/>&nbsp;- "firetv": cycles through random selections of the FireTV wallpapers<br/>&nbsp;- "/r/&lt;subreddit&gt;": cycles through the most recent "hot" image posts from the subreddit<br/>&nbsp;- "icloud:&lt;album id&gt;": cycles through random selections of the specified album|
 |`updateInterval`|`60 * 60 * 1000`|How often (in ms) to check the source for new wallpapers.|
 |`slideInterval`|`5 * 60 * 1000`|How often (in ms) to change images.|
-|`maximumEntries`|`10`|The maximum number of images to switch between from the source.|
+|`maximumEntries`|`10`|The maximum number of images to load from the source.|
 |`filter`|`"grayscale(0.5) brightness(0.5)"`|The CSS filter to apply to the images, to improve readability of other modules' text|
 |`orientation`|`"auto"`|The image orientation to retrieve.  Choices are "vertical," "horizontal," and "auto."|
 |`crossfade`|`true`|Whether to crossfade between images when loading a new wallpaper, or just replace the current image.|
