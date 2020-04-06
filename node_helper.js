@@ -87,6 +87,24 @@ module.exports = NodeHelper.create({
         "images": shuffle(self.chromecast).slice(0, config.maximumEntries),
       });
       return;
+	} else if (source === "mixed") {
+		request(config,
+			function(error, response, body) {
+				if (error) {
+					self.sendSocketNotification("FETCH_ERROR", { error: error });
+					return console.error(fmt(" ERROR - MMM-Wallpaper: {}", error));
+				}
+				if (response.statusCode < 400 && body.length > 0) {
+				self.mixedBing = self.processResponse(response, body, config);
+				}
+			}
+		);
+		self.sendSocketNotification("WALLPAPERS", {
+			"source": config.source,
+			"orientation": config.orientation,
+			"images": shuffle(self.chromecast.concat(self.firetv.images).concat(self.mixedBing)).slice(0, config.maximumEntries),
+      });
+      return;
     } else if (source.startsWith("/r/")) {
       self.request(config, {
         url: fmt("https://www.reddit.com{}/hot.json", config.source),
@@ -167,6 +185,7 @@ module.exports = NodeHelper.create({
     var self = this;
     var cache_key = self.getCacheKey(config);
     var images;
+	var mixedBing;
 
     var source = config.source.toLowerCase();
     if (source.startsWith("/r/")) {
@@ -177,9 +196,12 @@ module.exports = NodeHelper.create({
       images = self.processFlickrData(config, body);
     } else if (source === "pexels") {
       images = self.processPexelsData(config, JSON.parse(body));
-    } else {
+    } else if (source === "bing") {
       images = self.processBingData(config, JSON.parse(body));
-    }
+    } else {
+	  mixedBing = self.processBingData(config, JSON.parse(body));
+	  return mixedBing;
+	}
 
     if (images.length === 0) {
       return;
