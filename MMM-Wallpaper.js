@@ -24,6 +24,7 @@ Module.register("MMM-Wallpaper", {
 
     self.image = null;
     self.nextImage = null;
+    self.loadNextImageTimer = null;
     self.imageIndex = 0;
 
     self.getData();
@@ -33,7 +34,11 @@ Module.register("MMM-Wallpaper", {
   },
 
   notificationReceived: function(notification, payload, sender) {
-    // Do nothing
+    var self = this;
+
+    if (notification === "LOAD_NEXT_WALLPAPER") {
+      self.loadNextImage();
+    }
   },
 
   socketNotificationReceived: function(notification, payload) {
@@ -51,11 +56,9 @@ Module.register("MMM-Wallpaper", {
           self.image = self.images[self.imageIndex];
           self.updateDom();
 
-          setInterval(function() {
-            self.imageIndex = (self.imageIndex + 1) % self.images.length;
-            self.nextImage = self.images[self.imageIndex];
-            self.updateDom();
-          }, self.config.slideInterval);
+          if (self.config.slideInterval > 0) {
+            self.loadNextImageTimer = setTimeout(function() { self.loadNextImage(); }, self.config.slideInterval);
+          }
         }
       }
     }
@@ -174,5 +177,18 @@ Module.register("MMM-Wallpaper", {
     }
 
     return url;
+  },
+
+  loadNextImage: function() {
+    var self = this;
+
+    self.imageIndex = (self.imageIndex + 1) % self.images.length;
+    self.nextImage = self.images[self.imageIndex];
+    self.updateDom();
+
+    if (self.config.slideInterval > 0) {
+      clearTimeout(self.loadNextImageTimer);
+      self.loadNextImageTimer = setTimeout(function() { self.loadNextImage(); }, self.config.slideInterval);
+    }
   },
 });
