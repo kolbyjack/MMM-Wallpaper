@@ -37,10 +37,9 @@ modules: [
 
 The following properties can be configured:
 
-
 |Option|Default|Description|
 |---|---|---|
-|`source`|`"bing"`|The image source(s) to use.  Can either be a string for a single source, or an array of sources, where one will be selected at random for each updateInterval.  Supported sources:<br/>&nbsp;- "bing": cycles through the most recent daily wallpapers from Bing<br/>&nbsp;- "chromecast": cycles through random selections of the Chromecast wallpapers (thanks TheLukaBoss)<br/>&nbsp;- "firetv": cycles through random selections of the FireTV wallpapers<br/>&nbsp;- "/r/&lt;subreddit&gt;": cycles through the most recent "hot" image posts from the subreddit<br/>&nbsp;- "icloud:&lt;album id&gt;": cycles through random selections of the specified album|
+|`source`|`"bing"`|The image source to use.  See table below for supported sources.|
 |`updateInterval`|`60 * 60 * 1000`|How often (in ms) to check the source for new wallpapers.|
 |`slideInterval`|`5 * 60 * 1000`|How often (in ms) to change images.|
 |`maximumEntries`|`10`|The maximum number of images to load from the source.|
@@ -49,3 +48,14 @@ The following properties can be configured:
 |`crossfade`|`true`|Whether to crossfade between images when loading a new wallpaper, or just replace the current image.|
 |`maxWidth`|`MAX_SAFE_INTEGER`|Maximum width of selected variant (only supported for reddit sources).|
 |`maxHeight`|`MAX_SAFE_INTEGER`|Maximum height of selected variant (only supported for reddit sources).|
+
+|Source|Description|
+|`"bing"`|Cycles through the most recent daily wallpapers from Bing.|
+|`"chromecast"`|Cycles through random selections of the Chromecast wallpapers (thanks TheLukaBoss).|
+|`"firetv"`|Cycles through random selections of the FireTV wallpapers.|
+|`"flickr-group:&lt;id&gt;"`|Cycles through random selections of the specified flickr group's photos.|
+|`"flickr-user:&lt;id&gt;"`|Cycles through random selections of specified flickr user's photos.|
+|`"flickr-user-faves:&lt;id&gt;"`|Cycles through random selections of specified flickr user's favorite photos.|
+|`"http(s)://url"`|Reloads the specified url at the configured interval.|
+|`"icloud:&lt;album id&gt;"`|Cycles through random selections of the specified album.|
+|`"/r/&lt;subreddit&gt;"`|Cycles through the most recent `hot` image posts from the subreddit.|

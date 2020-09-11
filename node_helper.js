@@ -75,6 +75,13 @@ module.exports = NodeHelper.create({
         "images": shuffle(self.chromecast).slice(0, config.maximumEntries),
       });
       return;
+    } else if (source.startsWith("http://") || source.startsWith("https://")) {
+      self.sendSocketNotification("WALLPAPERS", {
+        "source": config.source,
+        "orientation": config.orientation,
+        "images": [{"url": config.source}],
+      });
+      return;
     } else if (source.startsWith("/r/")) {
       self.request(config, {
         url: `https://www.reddit.com${config.source}/hot.json`,
