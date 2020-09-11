@@ -54,9 +54,9 @@ The following properties can be configured:
 |`"bing"`|Cycles through the most recent daily wallpapers from Bing.|
 |`"chromecast"`|Cycles through random selections of the Chromecast wallpapers (thanks TheLukaBoss).|
 |`"firetv"`|Cycles through random selections of the FireTV wallpapers.|
-|`"flickr-group:&lt;id&gt;"`|Cycles through random selections of the specified flickr group's photos.|
-|`"flickr-user:&lt;id&gt;"`|Cycles through random selections of specified flickr user's photos.|
-|`"flickr-user-faves:&lt;id&gt;"`|Cycles through random selections of specified flickr user's favorite photos.|
+|`"flickr-group:<id>"`|Cycles through random selections of the specified flickr group's photos.|
+|`"flickr-user:<id>"`|Cycles through random selections of specified flickr user's photos.|
+|`"flickr-user-faves:<id>"`|Cycles through random selections of specified flickr user's favorite photos.|
 |`"http(s)://url"`|Reloads the specified url at the configured interval.|
-|`"icloud:&lt;album id&gt;"`|Cycles through random selections of the specified album.|
-|`"/r/&lt;subreddit&gt;"`|Cycles through the most recent `hot` image posts from the subreddit.|
+|`"icloud:<album id>"`|Cycles through random selections of the specified album.|
+|`"/r/<subreddit>"`|Cycles through the most recent `hot` image posts from the subreddit.|
