@@ -50,6 +50,7 @@ The following properties can be configured:
 |`maxHeight`|`MAX_SAFE_INTEGER`|Maximum height of selected variant (only supported for reddit sources).|
 
 |Source|Description|
+|---|---|
 |`"bing"`|Cycles through the most recent daily wallpapers from Bing.|
 |`"chromecast"`|Cycles through random selections of the Chromecast wallpapers (thanks TheLukaBoss).|
 |`"firetv"`|Cycles through random selections of the FireTV wallpapers.|
