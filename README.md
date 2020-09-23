@@ -48,6 +48,7 @@ The following properties can be configured:
 |`crossfade`|`true`|Whether to crossfade between images when loading a new wallpaper, or just replace the current image.|
 |`maxWidth`|`MAX_SAFE_INTEGER`|Maximum width of selected variant (only supported for reddit sources).|
 |`maxHeight`|`MAX_SAFE_INTEGER`|Maximum height of selected variant (only supported for reddit sources).|
+|`nsfw`|`true`|Whether to allow 18+ images to be chosen (only supported for reddit sources).|
 
 |Source|Description|
 |---|---|

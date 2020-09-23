@@ -13,6 +13,7 @@ Module.register("MMM-Wallpaper", {
     crossfade: true,
     maxWidth: Number.MAX_SAFE_INTEGER,
     maxHeight: Number.MAX_SAFE_INTEGER,
+    nsfw: true,
   },
 
   getStyles: function() {

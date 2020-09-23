@@ -240,7 +240,11 @@ module.exports = NodeHelper.create({
     for (var i in data.data.children) {
       var post = data.data.children[i];
 
-      if (post.kind === "t3" && !post.data.pinned && !post.data.stickied && post.data.post_hint === "image") {
+      if (post.kind === "t3"
+          && !post.data.pinned
+          && !post.data.stickied
+          && post.data.post_hint === "image"
+          && (config.nsfw || !post.data.over_18)) {
         var variants = post.data.preview.images[0].resolutions.slice(0);
 
         variants.push(post.data.preview.images[0].source);
