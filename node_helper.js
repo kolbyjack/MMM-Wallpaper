@@ -280,26 +280,10 @@ module.exports = NodeHelper.create({
           body: '{"streamCtag":null}'
         });
       } else if (response.statusCode === 200) {
-        var photos = shuffle(body.photos).filter((p) => p != null).slice(0, config.maximumEntries);
-        var photoGuids = photos.map((p) => { return p.photoGuid; });
-
+        self.iCloudPhotos = shuffle(body.photos).filter((p) => p != null && p.derivatives.mediaAssetType !== "video").slice(0, config.maximumEntries);
         self.iCloudState = "webasseturls";
-        self.iCloudMetadata = photos.reduce((o, p) => {
-          if (p.derivatives.mediaAssetType === "video") {
-            return o;
-          }
 
-          for (var d in p.derivatives) {
-            var meta = p.derivatives[d];
-
-            o[meta.checksum] = {
-              caption: p.caption
-            };
-          }
-
-          return o
-        }, {});
-
+        var photoGuids = self.iCloudPhotos.map((p) => { return p.photoGuid; });
         self.request(config, {
           method: "POST",
           url: `https://${self.iCloudHost}/${album}/sharedstreams/webasseturls`,
@@ -307,17 +291,46 @@ module.exports = NodeHelper.create({
         });
       }
     } else if (self.iCloudState === "webasseturls") {
-      for (var guid in body.items) {
-        var p = body.items[guid];
+      for (var checksum in body.items) {
+        var p = body.items[checksum];
         var loc = body.locations[p.url_location];
         var host = loc.hosts[Math.floor(Math.random() * loc.hosts.length)];
-        var meta = self.iCloudMetadata[guid];
 
-        images.push({
-          url: `${loc.scheme}://${host}${p.url_path}`,
-          caption: meta.caption,
-        });
+        for (var i in self.iCloudPhotos) {
+          for (var d in self.iCloudPhotos[i].derivatives) {
+            var m = self.iCloudPhotos[i].derivatives[d];
+            if (m.checksum === checksum) {
+              m.url = `${loc.scheme}://${host}${p.url_path}`;
+              break;
+            }
+          }
+        }
       }
+
+      images = self.iCloudPhotos.map((p) => {
+        var result = {
+          url: null,
+          caption: p.caption,
+          variants: [],
+        };
+
+        for (var i in p.derivatives) {
+          var d = p.derivatives[i];
+
+          if (+d.width > 0) {
+            result.variants.push({
+              url: d.url,
+              width: +d.width,
+              height: +d.height,
+            });
+          }
+        }
+
+        result.variants.sort((a, b) => { return a.width * a.height - b.width * b.height; });
+        result.url = result.variants[result.variants.length - 1].url;
+
+        return result;
+      });
     }
 
     return images;
