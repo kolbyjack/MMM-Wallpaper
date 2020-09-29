@@ -27,6 +27,7 @@ Module.register("MMM-Wallpaper", {
     self.nextImage = null;
     self.loadNextImageTimer = null;
     self.imageIndex = 0;
+    self.imageClasses = {};
 
     self.getData();
     setInterval(function() { self.getData(); }, self.config.updateInterval);
@@ -91,32 +92,51 @@ Module.register("MMM-Wallpaper", {
     if (self.image !== null) {
       var img = document.createElement("img");
       var caption = self.image.caption;
+      var url = self.getImageUrl(self.image);
 
       img.style.filter = self.config.filter;
-      img.src = self.getImageUrl(self.image);
-      img.onload = function() {
-        img.className = self.getWallpaperClasses(img);
-        setTimeout(function() { img.onload = null; }, 15000);
-      };
+      if (url in self.imageClasses) {
+        img.className = self.imageClasses[url];
+      } else {
+        img.style.opacity = "0";
+        img.onload = function() {
+          self.imageClasses[img.src] = self.getWallpaperClasses(img);
+          img.className = self.imageClasses[img.src];
+          img.style.opacity = "1";
+        };
+      }
+      img.src = url;
 
       wrapper.appendChild(img);
 
       if (self.nextImage !== null) {
         var nextImg = document.createElement("img");
+        var nextUrl = self.getImageUrl(self.nextImage);
 
         caption = self.nextImage.caption;
         nextImg.style.filter = self.config.filter;
-        nextImg.src = self.getImageUrl(self.nextImage);
+        nextImg.style.opacity = "0";
+        if (nextUrl in self.imageClasses) {
+          nextImg.className = self.imageClasses[nextUrl];
+        }
         nextImg.onload = function() {
-          nextImg.className = self.getWallpaperClasses(nextImg);
-          if (self.config.crossfade) {
-            nextImg.style.transition = "opacity 1s ease-in-out";
-            nextImg.style.opacity = "1";
+          if (!(nextImg.src in self.imageClasses)) {
+            self.imageClasses[nextImg.src] = self.getWallpaperClasses(nextImg);
+            nextImg.className = self.imageClasses[nextImg.src];
           }
+          setTimeout(() => {
+            if (self.config.crossfade) {
+              nextImg.ontransitionend = function() { img.remove(); };
+              nextImg.style.transition = "opacity 1s ease-in-out";
+            } else {
+              img.remove();
+            }
+            nextImg.style.opacity = "1";
+          }, 1);
           self.image = self.nextImage;
           self.nextImage = null;
-          setTimeout(function() { nextImg.onload = null; }, 15000);
         };
+        nextImg.src = nextUrl;
 
         wrapper.appendChild(nextImg);
       }
