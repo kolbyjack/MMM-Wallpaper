@@ -12,7 +12,7 @@ function shuffle(a) {
   for (i = a.length; i > 0; --i) {
     j = Math.floor(Math.random() * i);
     result.push(source[j]);
-    source[j] = source[i];
+    source[j] = source[i - 1];
   }
 
   return result;
