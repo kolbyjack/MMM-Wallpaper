@@ -115,6 +115,10 @@ module.exports = NodeHelper.create({
       self.request(config, {
         url: `https://api.flickr.com/services/feeds/photos_faves.gne?format=json&id=${config.source.substring(18)}`,
       });
+    } else if (source.startsWith("lightroom:")) {
+      self.request(config, {
+        url: `https://${config.source.substring(10)}`,
+      });
     } else {
       self.request(config, {
         url: `https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=${config.maximumEntries}`,
@@ -172,6 +176,8 @@ module.exports = NodeHelper.create({
       images = self.processFlickrData(config, body);
     } else if (source === "pexels") {
       images = self.processPexelsData(config, JSON.parse(body));
+    } else if (source.startsWith("lightroom:")) {
+      images = self.processLightroomData(config, body);
     } else {
       images = self.processBingData(config, JSON.parse(body));
     }
@@ -348,6 +354,48 @@ module.exports = NodeHelper.create({
         url: post.media.m.replace(/_m\./, "_h."),
         caption: post.title,
       });
+
+      if (images.length === config.maximumEntries) {
+        break;
+      }
+    }
+
+    return images;
+  },
+
+  processLightroomData: function(config, body) {
+    var self = this;
+    var data = shuffle(body.match(/data-srcset="[^"]+/g));
+    console.log(data);
+
+    var images = [];
+    for (var i in data) {
+      var variants = data[i].substring(13).split(",");
+      var result = {
+        url: null,
+        variants: [],
+      };
+
+      for (var i in variants) {
+        var d = variants[i].split(" ");
+        var width = Number.parseInt(d[1]);
+
+        if (width > 0) {
+          result.variants.push({
+            url: d[0],
+            width: width,
+            height: 1,
+          });
+        }
+      }
+
+      if (result.variants.length === 0) {
+        continue;
+      }
+
+      result.variants.sort((a, b) => { return a.width * a.height - b.width * b.height; });
+      result.url = result.variants[result.variants.length - 1].url;
+      images.push(result);
 
       if (images.length === config.maximumEntries) {
         break;
