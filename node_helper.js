@@ -366,7 +366,6 @@ module.exports = NodeHelper.create({
   processLightroomData: function(config, body) {
     var self = this;
     var data = shuffle(body.match(/data-srcset="[^"]+/g));
-    console.log(data);
 
     var images = [];
     for (var i in data) {
