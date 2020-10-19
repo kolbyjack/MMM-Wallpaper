@@ -49,6 +49,7 @@ The following properties can be configured:
 |`maxWidth`|`MAX_SAFE_INTEGER`|Maximum width of selected variant (only supported for reddit sources).|
 |`maxHeight`|`MAX_SAFE_INTEGER`|Maximum height of selected variant (only supported for reddit sources).|
 |`nsfw`|`true`|Whether to allow 18+ images to be chosen (only supported for reddit sources).|
+|`size`|`cover`|Sizing policy for images.  Similar to CSS [background-size](https://www.w3schools.com/cssref/css3_pr_background-size.asp).  Choices are "cover," "contain," and "auto."|
 
 |Source|Description|
 |---|---|

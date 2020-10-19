@@ -5,12 +5,20 @@
   transform: translateX(-50%) translateY(-50%);
 }
 
-.MMM-Wallpaper .tall {
+.MMM-Wallpaper .cover-tall {
   width: 100%;
 }
 
-.MMM-Wallpaper .wide {
+.MMM-Wallpaper .cover-wide {
   height: 100%;
+}
+
+.MMM-Wallpaper .contain-tall {
+  height: 100%;
+}
+
+.MMM-Wallpaper .contain-wide {
+  width: 100%;
 }
 
 .MMM-Wallpaper .title {

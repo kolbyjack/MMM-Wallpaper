@@ -14,6 +14,7 @@ Module.register("MMM-Wallpaper", {
     maxWidth: Number.MAX_SAFE_INTEGER,
     maxHeight: Number.MAX_SAFE_INTEGER,
     nsfw: true,
+    size: "cover",
   },
 
   getStyles: function() {
@@ -171,9 +172,9 @@ Module.register("MMM-Wallpaper", {
     var fitVerticalWidth = image.naturalWidth * viewport.height / image.naturalHeight;
 
     if (fitVerticalWidth >= viewport.width) {
-      return "wallpaper wide";
+      return `wallpaper ${self.config.size}-wide`;
     } else {
-      return "wallpaper tall";
+      return `wallpaper ${self.config.size}-tall`;
     }
   },
 
