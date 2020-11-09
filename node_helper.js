@@ -89,6 +89,13 @@ module.exports = NodeHelper.create({
           "user-agent": "MagicMirror:MMM-Wallpaper:v1.0 (by /u/kolbyhack)"
         },
       });
+      else if (source.startsWith("/user/")) {
+      self.request(config, {
+        url: `https://www.reddit.com${config.source}/hot.json`,
+        headers: {
+          "user-agent": "MagicMirror:MMM-Wallpaper:v1.0 (by /u/kolbyhack)"
+        },
+      });
     } else if (source === "pexels") {
       self.request(config, {
         url: "https://api.pexels.com/v1/search?query=" + config.pexels_search,
