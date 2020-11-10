@@ -89,9 +89,9 @@ module.exports = NodeHelper.create({
           "user-agent": "MagicMirror:MMM-Wallpaper:v1.0 (by /u/kolbyhack)"
         },
       });
-      else if (source.startsWith("/user/")) {
+    } else if (source.startsWith("/user/")) {
       self.request(config, {
-        url: `https://www.reddit.com${config.source}/hot.json`,
+        url: `https://www.reddit.com${config.source}.json`,
         headers: {
           "user-agent": "MagicMirror:MMM-Wallpaper:v1.0 (by /u/kolbyhack)"
         },
@@ -175,7 +175,7 @@ module.exports = NodeHelper.create({
     var images;
 
     var source = config.source.toLowerCase();
-    if (source.startsWith("/r/")) {
+    if (source.startsWith("/r/") || source.startsWith("/user/")) {
       images = self.processRedditData(config, JSON.parse(body));
     } else if (source.startsWith("icloud:")) {
       images = self.processiCloudData(response, JSON.parse(body), config);
