@@ -62,5 +62,6 @@ The following properties can be configured:
 |`"http(s)://url"`|Reloads the specified url at the configured interval.|
 |`"icloud:<album id>"`|Cycles through random selections of the specified album.|
 |`"lightroom:<user.myportfolio.com/album>"`|Cycles through random selections of the specified album.|
+|`"local:</path/to/directory>"`|Cycles through random selections of the images in the specified local directory.|
 |`"/r/<subreddit>"`|Cycles through the most recent `hot` image posts from the subreddit.|
 |`"/user/<username>/m/<subreddit>"`|Cycles through the most recent `hot` image posts from the your multireddit.|

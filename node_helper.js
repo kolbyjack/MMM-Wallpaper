@@ -3,6 +3,8 @@
 const NodeHelper = require("node_helper");
 const request = require("request");
 const fs = require("fs");
+const express = require("express");
+const crypto = require("crypto");
 
 function shuffle(a) {
   var source = a.slice(0);
@@ -32,6 +34,7 @@ module.exports = NodeHelper.create({
 
     console.log(`Starting node helper for: ${self.name}`);
     self.cache = {};
+    self.staticHandlers = {};
     self.firetv = JSON.parse(fs.readFileSync(`${__dirname}/firetv.json`));
     self.chromecast = JSON.parse(fs.readFileSync(`${__dirname}/chromecast.json`));
   },
@@ -67,21 +70,20 @@ module.exports = NodeHelper.create({
         "orientation": config.orientation,
         "images": shuffle(self.firetv.images).slice(0, config.maximumEntries),
       });
-      return;
     } else if (source === "chromecast") {
       self.sendSocketNotification("WALLPAPERS", {
         "source": config.source,
         "orientation": config.orientation,
         "images": shuffle(self.chromecast).slice(0, config.maximumEntries),
       });
-      return;
+    } else if (source.startsWith("local:")) {
+      self.readdir(config);
     } else if (source.startsWith("http://") || source.startsWith("https://")) {
       self.sendSocketNotification("WALLPAPERS", {
         "source": config.source,
         "orientation": config.orientation,
         "images": [{"url": config.source}],
       });
-      return;
     } else if (source.startsWith("/r/")) {
       self.request(config, {
         url: `https://www.reddit.com${config.source}/hot.json`,
@@ -131,6 +133,41 @@ module.exports = NodeHelper.create({
         url: `https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=${config.maximumEntries}`,
       });
     }
+  },
+
+  readdir: function(config) {
+    var self = this;
+    var cacheKey = self.getCacheKey(config);
+    const path = config.source.substring(6);
+
+    if (!(cacheKey in self.staticHandlers)) {
+      var handler = express.static(path);
+
+      self.staticHandlers[cacheKey] = handler;
+      self.expressApp.use(`/${self.name}/images/${cacheKey}/`, handler);
+    }
+
+    async function processDir() {
+      const dir = await fs.promises.readdir(path);
+      var images = [];
+
+      for (const dirent of dir) {
+        if (dirent.toLowerCase().match(/\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/) !== null) {
+          images.push({
+            url: `/${self.name}/images/${cacheKey}/${dirent}`,
+          });
+        }
+      }
+
+      self.cache[cacheKey] = {
+        "expires": Date.now() + config.updateInterval * 0.9,
+        "images": shuffle(images).slice(0, config.maximumEntries),
+      };
+
+      self.sendWallpaperUpdate(config);
+    };
+
+    processDir();
   },
 
   request: function(config, params) {
@@ -412,6 +449,6 @@ module.exports = NodeHelper.create({
   },
 
   getCacheKey: function(config) {
-    return config.source + "::" + config.orientation;
+    return crypto.createHash("sha1").update(`${config.source}::${config.orientation}`).digest("hex");
   },
 });
