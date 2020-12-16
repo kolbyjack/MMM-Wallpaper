@@ -393,9 +393,14 @@ module.exports = NodeHelper.create({
     var images = [];
     for (var i in data.items) {
       var post = data.items[i];
+      var url = post.media.m;
+
+      if (config.flickrHighRes) {
+        url = url.replace(/_m\./, "_h.");
+      }
 
       images.push({
-        url: post.media.m.replace(/_m\./, "_h."),
+        url: url,
         caption: post.title,
       });
 

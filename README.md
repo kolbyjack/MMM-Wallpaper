@@ -65,3 +65,11 @@ The following properties can be configured:
 |`"local:</path/to/directory>"`|Cycles through random selections of the images in the specified local directory.|
 |`"/r/<subreddit>"`|Cycles through the most recent `hot` image posts from the subreddit.|
 |`"/user/<username>/m/<subreddit>"`|Cycles through the most recent `hot` image posts from the your multireddit.|
+
+Source-specific configuration items:
+
+flickr-group, flickr-user, flickr-user-faves:
+
+|Option|Default|Description|
+|---|---|---|
+|`"flickrHighRes"`|true|Whether to try loading the high-res versions of the returned images.|
