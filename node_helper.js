@@ -85,7 +85,7 @@ module.exports = NodeHelper.create({
       });
     } else if (source === "pexels") {
       self.request(config, {
-        url: "https://api.pexels.com/v1/search?query=" + config.pexels_search,
+        url: `https://api.pexels.com/v1/search?query${config.pexels_search}`,
         headers: {
           Authorization: config.pexels_key
         },
@@ -229,16 +229,7 @@ module.exports = NodeHelper.create({
 
   processPexelsData: function (config, data) {
     var self = this;
-    var width = (config.orientation === "vertical") ? 1080 : 1920;
-    var height = (config.orientation === "vertical") ? 1920 : 1080;
-    var suffix = "_" + width + "x" + height + ".jpg";
-    var orientation;
-
-    if (config.orientation === "vertical") {
-      orientation = "portrait"
-    } else {
-      orientation = "landscape"
-    }
+    var orientation = (config.orientation === "vertical") ? "portrait" : "landscape";
 
     var images = [];
     for (var i in data.photos) {
@@ -246,7 +237,7 @@ module.exports = NodeHelper.create({
 
       images.push({
         url: image.src[orientation],
-        caption: "Photographer:" + image.photographer,
+        caption: `Photographer: ${image.photographer}`,
       });
     }
 
