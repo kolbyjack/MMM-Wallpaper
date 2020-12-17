@@ -49,29 +49,26 @@ module.exports = NodeHelper.create({
 
   fetchWallpapers: function(config) {
     var self = this;
-    var cache_key = self.getCacheKey(config);
+    var result = self.getCacheEntry(config);
     var url;
     var method = "GET";
     var body = undefined;
 
-    if (cache_key in self.cache &&
-        config.maximumEntries <= self.cache[cache_key].images.length &&
-        Date.now() < self.cache[cache_key].expires)
-    {
-      self.sendWallpaperUpdate(config);
+    if (config.maximumEntries <= result.images.length && Date.now() < result.expires) {
+      self.sendResult(config);
       return;
     }
 
     config.source = pick(config.source);
     var source = config.source.toLowerCase();
     if (source === "firetv") {
-      self.sendNotification(config, shuffle(self.firetv.images).slice(0, config.maximumEntries));
+      self.cacheResult(config, shuffle(self.firetv.images));
     } else if (source === "chromecast") {
-      self.sendNotification(config, shuffle(self.chromecast).slice(0, config.maximumEntries));
+      self.cacheResult(config, shuffle(self.chromecast));
     } else if (source.startsWith("local:")) {
       self.readdir(config);
     } else if (source.startsWith("http://") || source.startsWith("https://")) {
-      self.sendNotification(config, [{"url": config.source}]);
+      self.cacheResult(config, [{"url": config.source}]);
     } else if (source.startsWith("/r/")) {
       self.request(config, {
         url: `https://www.reddit.com${config.source}/hot.json`,
@@ -125,14 +122,14 @@ module.exports = NodeHelper.create({
 
   readdir: function(config) {
     var self = this;
-    var cacheKey = self.getCacheKey(config);
+    var result = self.getCacheEntry(config);
     const path = config.source.substring(6);
 
-    if (!(cacheKey in self.staticHandlers)) {
+    if (!(result.key in self.staticHandlers)) {
       var handler = express.static(path);
 
-      self.staticHandlers[cacheKey] = handler;
-      self.expressApp.use(`/${self.name}/images/${cacheKey}/`, handler);
+      self.staticHandlers[result.key] = handler;
+      self.expressApp.use(`/${self.name}/images/${result.key}/`, handler);
     }
 
     async function processDir() {
@@ -142,7 +139,7 @@ module.exports = NodeHelper.create({
       for (const dirent of dir) {
         if (dirent.toLowerCase().match(/\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/) !== null) {
           images.push({
-            url: `/${self.name}/images/${cacheKey}/${dirent}`,
+            url: `/${self.name}/images/${result.key}/${dirent}`,
           });
         }
       }
@@ -151,12 +148,7 @@ module.exports = NodeHelper.create({
         images = shuffle(images);
       }
 
-      self.cache[cacheKey] = {
-        "expires": Date.now() + config.updateInterval * 0.9,
-        "images": images.slice(0, config.maximumEntries),
-      };
-
-      self.sendWallpaperUpdate(config);
+      self.cacheResult(config, images);
     };
 
     processDir();
@@ -187,26 +179,30 @@ module.exports = NodeHelper.create({
     );
   },
 
-  sendWallpaperUpdate: function(config) {
+  cacheResult: function(config, images) {
     var self = this;
-    var cache_key = self.getCacheKey(config);
+    var cache = self.getCacheEntry(config);
 
-    self.sendNotification(config, self.cache[cache_key].images);
+    cache.expires = Date.now() + config.updateInterval * 0.9;
+    cache.images = images;
+
+    self.sendResult(config);
   },
 
-  sendNotification: function(config, images) {
+  sendResult: function(config) {
     var self = this;
-
-    self.sendSocketNotification("WALLPAPERS", {
+    var result = self.getCacheEntry(config);
+    var message = {
       "source": config.source,
       "orientation": config.orientation,
-      "images": images,
-    });
+      "images": result.images.slice(0, config.maximumEntries),
+    };
+
+    self.sendSocketNotification("WALLPAPERS", message);
   },
 
   processResponse: function(response, body, config) {
     var self = this;
-    var cache_key = self.getCacheKey(config);
     var images;
 
     var source = config.source.toLowerCase();
@@ -228,12 +224,7 @@ module.exports = NodeHelper.create({
       return;
     }
 
-    self.cache[cache_key] = {
-      "expires": Date.now() + config.updateInterval * 0.9,
-      "images": images,
-    };
-
-    self.sendWallpaperUpdate(config);
+    self.cacheResult(config, images);
   },
 
   processPexelsData: function (config, data) {
@@ -458,7 +449,18 @@ module.exports = NodeHelper.create({
     return images;
   },
 
-  getCacheKey: function(config) {
-    return crypto.createHash("sha1").update(`${config.source}::${config.orientation}`).digest("hex");
+  getCacheEntry: function(config) {
+    var self = this;
+    var key = crypto.createHash("sha1").update(`${config.source}::${config.orientation}`).digest("hex");
+
+    if (!(key in self.cache)) {
+      self.cache[key] = {
+        "key": key,
+        "expires": Date.now(),
+        "images": [],
+      };
+    }
+
+    return self.cache[key];
   },
 });
