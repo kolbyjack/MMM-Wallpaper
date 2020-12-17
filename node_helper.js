@@ -248,7 +248,7 @@ module.exports = NodeHelper.create({
     var self = this;
     var width = (config.orientation === "vertical") ? 1080 : 1920;
     var height = (config.orientation === "vertical") ? 1920 : 1080;
-    var suffix = "_" + width + "x" + height + ".jpg";
+    var suffix = `_${width}x${height}.jpg`;
 
     var images = [];
     for (var i in data.images) {
