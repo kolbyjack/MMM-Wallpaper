@@ -147,9 +147,13 @@ module.exports = NodeHelper.create({
         }
       }
 
+      if (config.shuffle) {
+        images = shuffle(images);
+      }
+
       self.cache[cacheKey] = {
         "expires": Date.now() + config.updateInterval * 0.9,
-        "images": shuffle(images).slice(0, config.maximumEntries),
+        "images": images.slice(0, config.maximumEntries),
       };
 
       self.sendWallpaperUpdate(config);
@@ -324,7 +328,10 @@ module.exports = NodeHelper.create({
           body: '{"streamCtag":null}'
         });
       } else if (response.statusCode === 200) {
-        self.iCloudPhotos = shuffle(body.photos).filter((p) => p != null && p.derivatives.mediaAssetType !== "video").slice(0, config.maximumEntries);
+        if (config.shuffle) {
+          body.photos = shuffle(body.photos);
+        }
+        self.iCloudPhotos = body.photos.filter((p) => p != null && p.derivatives.mediaAssetType !== "video").slice(0, config.maximumEntries);
         self.iCloudState = "webasseturls";
 
         var photoGuids = self.iCloudPhotos.map((p) => { return p.photoGuid; });
@@ -408,7 +415,11 @@ module.exports = NodeHelper.create({
 
   processLightroomData: function(config, body) {
     var self = this;
-    var data = shuffle(body.match(/data-srcset="[^"]+/g));
+    var data = body.match(/data-srcset="[^"]+/g);
+
+    if (config.shuffle) {
+      data = shuffle(data);
+    }
 
     var images = [];
     for (var i in data) {

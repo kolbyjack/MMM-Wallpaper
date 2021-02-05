@@ -16,6 +16,7 @@ Module.register("MMM-Wallpaper", {
     nsfw: true,
     size: "cover",
     flickrHighRes: true,
+    shuffle: true,
   },
 
   getStyles: function() {
