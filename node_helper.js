@@ -65,25 +65,13 @@ module.exports = NodeHelper.create({
     config.source = pick(config.source);
     var source = config.source.toLowerCase();
     if (source === "firetv") {
-      self.sendSocketNotification("WALLPAPERS", {
-        "source": config.source,
-        "orientation": config.orientation,
-        "images": shuffle(self.firetv.images).slice(0, config.maximumEntries),
-      });
+      self.sendNotification(config, shuffle(self.firetv.images).slice(0, config.maximumEntries));
     } else if (source === "chromecast") {
-      self.sendSocketNotification("WALLPAPERS", {
-        "source": config.source,
-        "orientation": config.orientation,
-        "images": shuffle(self.chromecast).slice(0, config.maximumEntries),
-      });
+      self.sendNotification(config, shuffle(self.chromecast).slice(0, config.maximumEntries));
     } else if (source.startsWith("local:")) {
       self.readdir(config);
     } else if (source.startsWith("http://") || source.startsWith("https://")) {
-      self.sendSocketNotification("WALLPAPERS", {
-        "source": config.source,
-        "orientation": config.orientation,
-        "images": [{"url": config.source}],
-      });
+      self.sendNotification(config, [{"url": config.source}]);
     } else if (source.startsWith("/r/")) {
       self.request(config, {
         url: `https://www.reddit.com${config.source}/hot.json`,
@@ -199,10 +187,16 @@ module.exports = NodeHelper.create({
     var self = this;
     var cache_key = self.getCacheKey(config);
 
+    self.sendNotification(config, self.cache[cache_key].images);
+  },
+
+  sendNotification: function(config, images) {
+    var self = this;
+
     self.sendSocketNotification("WALLPAPERS", {
       "source": config.source,
       "orientation": config.orientation,
-      "images": self.cache[cache_key].images,
+      "images": images,
     });
   },
 
@@ -243,7 +237,7 @@ module.exports = NodeHelper.create({
     var width = (config.orientation === "vertical") ? 1080 : 1920;
     var height = (config.orientation === "vertical") ? 1920 : 1080;
     var suffix = "_" + width + "x" + height + ".jpg";
-    var orientation
+    var orientation;
 
     if (config.orientation === "vertical") {
       orientation = "portrait"
