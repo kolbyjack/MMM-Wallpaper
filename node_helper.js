@@ -192,13 +192,12 @@ module.exports = NodeHelper.create({
   sendResult: function(config) {
     var self = this;
     var result = self.getCacheEntry(config);
-    var message = {
+
+    self.sendSocketNotification("WALLPAPERS", {
       "source": config.source,
       "orientation": config.orientation,
       "images": result.images.slice(0, config.maximumEntries),
-    };
-
-    self.sendSocketNotification("WALLPAPERS", message);
+    });
   },
 
   processResponse: function(response, body, config) {
