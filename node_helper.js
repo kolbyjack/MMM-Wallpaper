@@ -5,6 +5,8 @@ const request = require("request");
 const fs = require("fs");
 const express = require("express");
 const crypto = require("crypto");
+const http = require("http");
+const https = require("https");
 
 function shuffle(a) {
   var source = a.slice(0);
@@ -34,7 +36,7 @@ module.exports = NodeHelper.create({
 
     console.log(`Starting node helper for: ${self.name}`);
     self.cache = {};
-    self.staticHandlers = {};
+    self.handlers = {};
     self.firetv = JSON.parse(fs.readFileSync(`${__dirname}/firetv.json`));
     self.chromecast = JSON.parse(fs.readFileSync(`${__dirname}/chromecast.json`));
   },
@@ -113,6 +115,11 @@ module.exports = NodeHelper.create({
       self.request(config, {
         url: `https://${config.source.substring(10)}`,
       });
+    } else if (source.startsWith("synology-moments:")) {
+      self.synologyMomentsState = "create_session";
+      self.request(config, {
+        url: config.source.substring(17),
+      });
     } else {
       self.request(config, {
         url: `https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=${config.maximumEntries}`,
@@ -125,10 +132,10 @@ module.exports = NodeHelper.create({
     var result = self.getCacheEntry(config);
     const path = config.source.substring(6);
 
-    if (!(result.key in self.staticHandlers)) {
+    if (!(result.key in self.handlers)) {
       var handler = express.static(path);
 
-      self.staticHandlers[result.key] = handler;
+      self.handlers[result.key] = handler;
       self.expressApp.use(`/${self.name}/images/${result.key}/`, handler);
     }
 
@@ -215,6 +222,8 @@ module.exports = NodeHelper.create({
       images = self.processPexelsData(config, JSON.parse(body));
     } else if (source.startsWith("lightroom:")) {
       images = self.processLightroomData(config, body);
+    } else if (source.startsWith("synology-moments:")) {
+      images = self.processSynologyMomentsData(response, body, config);
     } else {
       images = self.processBingData(config, JSON.parse(body));
     }
@@ -434,6 +443,87 @@ module.exports = NodeHelper.create({
       if (images.length === config.maximumEntries) {
         break;
       }
+    }
+
+    return images;
+  },
+
+  processSynologyMomentsData: function(response, body, config) {
+    var self = this;
+    var url = new URL(config.source.substring(17));
+    var last_slash = url.pathname.lastIndexOf("/");
+    var api_path = `${url.pathname.substring(0, last_slash)}/webapi/entry.cgi`;
+    var api_url = `${url.protocol}//${url.host}${api_path}`;
+    var album = url.pathname.substring(last_slash + 1);
+    var images = [];
+    var cache_entry = self.getCacheEntry(config);
+
+    if (!("image_map" in cache_entry)) {
+      cache_entry.image_map = {};
+      cache_entry.session_cookie = null;
+    }
+
+    if (!(cache_entry.key in self.handlers)) {
+      // https://stackoverflow.com/a/10435819
+      var handler = (oreq, ores, next) => {
+        const options = {
+          host: url.host,
+          port: url.port,
+          protocol: url.protocol,
+          path: cache_entry.image_map[oreq.url],
+          method: "GET",
+          headers: {
+            "cache-control": "none",
+            "cookie": cache_entry.session_cookie,
+          },
+        };
+
+        const module = (url.protocol === "http:") ? http : https;
+        const preq = module.request(options, (pres) => {
+          ores.writeHead(pres.statusCode, pres.headers);
+          pres.on("data", (chunk) => { ores.write(chunk); });
+          pres.on("close", () => { ores.end(); });
+          pres.on("end", () => { ores.end(); });
+        }).on("error", e => {
+          try {
+            ores.writeHead(500);
+            ores.write(e.message);
+          } catch (e) {
+          }
+          ores.end();
+        });
+
+        preq.end();
+      };
+
+      self.handlers[cache_entry.key] = handler;
+      self.expressApp.use(`/${self.name}/images/${cache_entry.key}/`, handler);
+    }
+
+    if (response.statusCode !== 200) {
+      console.error(`ERROR: ${response.statusCode} -- ${body}`);
+    } else if (self.synologyMomentsState === "create_session") {
+      if ("set-cookie" in response.headers) {
+        cache_entry.session_cookie = response.headers["set-cookie"][0].split(";")[0];
+        self.synologyMomentsState = "browse_item";
+        self.request(config, {
+          method: "POST",
+          url: api_url,
+          body: `additional=["thumbnail","resolution","orientation","video_convert","video_meta"]&offset=0&limit=${config.maximumEntries}&passphrase="${album}"&api="SYNO.Photo.Browse.Item"&method="list"&version=3`,
+          headers: {
+            "cookie": cache_entry.session_cookie,
+            "x-syno-sharing": album,
+          },
+        });
+      }
+    } else {
+      body = JSON.parse(body);
+      images = body.data.list.map((i) => {
+        cache_entry.image_map[`/${i.id}`] = `${api_path}?id=${i.id}&cache_key=${i.additional.thumbnail.cache_key}&type="unit"&size="xl"&api="SYNO.Photo.Thumbnail"&method="get"&version=1&_sharing_id="${album}"&passphrase="${album}"`;
+        return {
+          url: `/${self.name}/images/${cache_entry.key}/${i.id}`,
+        };
+      });
     }
 
     return images;
