@@ -22,6 +22,11 @@ function shuffle(a) {
   return result;
 }
 
+function parseBool(val) {
+    var num = +val;
+    return !!(val && isNaN(num) ? String(val).toLowerCase().replace(!1,'') : num);
+}
+
 function pick(a) {
   if (Array.isArray(a)) {
     return a[Math.floor(Math.random() * a.length)];
@@ -384,7 +389,7 @@ module.exports = NodeHelper.create({
     for (var post of data.items) {
       var url = post.media.m;
 
-      if (config.flickrHighRes) {
+      if (parseBool(config.flickrHighRes)) {
         url = url.replace(/_m\./, "_h.");
       }
 
