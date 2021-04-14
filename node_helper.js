@@ -87,7 +87,7 @@ module.exports = NodeHelper.create({
       });
     } else if (source === "pexels") {
       self.request(config, {
-        url: `https://api.pexels.com/v1/search?query${config.pexels_search}`,
+        url: `https://api.pexels.com/v1/search?query=${config.pexels_search}`,
         headers: {
           Authorization: config.pexels_key
         },
