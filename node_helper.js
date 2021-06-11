@@ -7,6 +7,7 @@ const express = require("express");
 const crypto = require("crypto");
 const http = require("http");
 const https = require("https");
+const { PassThrough } = require("stream");
 
 function shuffle(a) {
   var source = a.slice(0);
@@ -120,6 +121,10 @@ module.exports = NodeHelper.create({
       self.request(config, {
         url: config.source.substring(17),
       });
+    } else if (source.startsWith("metmuseum:")) {
+      self.request(config, {
+        url: `https://collectionapi.metmuseum.org/public/collection/v1/objects?departmentIds=${config.source.substring(10)}`,
+      });
     } else {
       self.request(config, {
         url: `https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=${config.maximumEntries}`,
@@ -186,14 +191,22 @@ module.exports = NodeHelper.create({
     );
   },
 
+  //cache accept both single object and array
   cacheResult: function(config, images) {
     var self = this;
     var cache = self.getCacheEntry(config);
 
     cache.expires = Date.now() + config.updateInterval * 0.9;
-    cache.images = images;
-
-    self.sendResult(config);
+    if (Array.isArray(images)) {
+      cache.images = images;
+    } else {
+      cache.images.push(images);
+    }
+    if (cache.images.length >= config.maximumEntries) {
+      self.sendResult(config);
+      //flush the cache
+      cache.images = [];
+    }
   },
 
   sendResult: function(config) {
@@ -224,6 +237,8 @@ module.exports = NodeHelper.create({
       images = self.processLightroomData(config, body);
     } else if (source.startsWith("synology-moments:")) {
       images = self.processSynologyMomentsData(response, body, config);
+    } else if (source.startsWith("metmuseum:")) {
+      images = self.processMetMuseumData(config, JSON.parse(body));
     } else {
       images = self.processBingData(config, JSON.parse(body));
     }
@@ -269,6 +284,36 @@ module.exports = NodeHelper.create({
     }
 
     return images;
+  },
+
+  processMetMuseumData: function(config, data) {
+    var self = this;
+    var counter = 0;
+    var cache = self.getCacheEntry(config);
+
+    if (config.shuffle) {
+      data.objectIDs = shuffle(data.objectIDs);
+    }
+
+    for (var id of data.objectIDs) {
+
+      if (counter === 60 || cache.images.length >= config.maximumEntries) {
+        //api calls are recommended to be less than 80 times per sec
+        break;
+      }
+
+      request(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`, function (error, response, body) {
+        var obj = JSON.parse(body);
+        if (obj.isPublicDomain) {
+          self.cacheResult(config, {
+            url: obj.primaryImageSmall,
+            caption: obj.title + ' - ' + obj.artistDisplayName,
+          });
+        } 
+      });
+      counter++;
+    }
+    return [];
   },
 
   processRedditData: function(config, data) {
