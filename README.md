@@ -67,6 +67,7 @@ The following properties can be configured:
 |`"synology-moments:<url>"`|Cycles through the latest images from the specified Synology moments album.|
 |`"/r/<subreddit>"`|Cycles through the most recent `hot` image posts from the subreddit.|
 |`"/user/<username>/m/<subreddit>"`|Cycles through the most recent `hot` image posts from the your multireddit.|
+|`"metmuseum:<departmentID>"` | Cycle through collections in the Metropolitan Museum of Art. [departmentID](https://collectionapi.metmuseum.org/public/collection/v1/departments) is used as a query parameter to get desired collections. Multiple departmentID can be combined as `"departmentID1\|departmentID2"`|
 
 Source-specific configuration items:
 
