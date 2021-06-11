@@ -122,8 +122,9 @@ module.exports = NodeHelper.create({
         url: config.source.substring(17),
       });
     } else if (source.startsWith("metmuseum:")) {
+      var args = config.source.substring(10).split(',');
       self.request(config, {
-        url: `https://collectionapi.metmuseum.org/public/collection/v1/objects?departmentIds=${config.source.substring(10)}`,
+        url: `https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&departmentId=${args[0]}&isHighlight=${args[1]}&q=${args[2]}`,
       });
     } else {
       self.request(config, {
@@ -311,6 +312,7 @@ module.exports = NodeHelper.create({
           });
         } 
       });
+      
       counter++;
     }
     return [];
