@@ -120,6 +120,11 @@ module.exports = NodeHelper.create({
       self.request(config, {
         url: config.source.substring(17),
       });
+    } else if (source.startsWith("metmuseum:")) {
+      var args = config.source.substring(10).split(",");
+      self.request(config, {
+        url: `https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&departmentId=${args[0]}&isHighlight=${args[1]}&q=${args[2]}`,
+      });
     } else {
       self.request(config, {
         url: `https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=${config.maximumEntries}`,
@@ -224,6 +229,8 @@ module.exports = NodeHelper.create({
       images = self.processLightroomData(config, body);
     } else if (source.startsWith("synology-moments:")) {
       images = self.processSynologyMomentsData(response, body, config);
+    } else if (source.startsWith("metmuseum:")) {
+      images = self.processMetMuseumData(config, JSON.parse(body));
     } else {
       images = self.processBingData(config, JSON.parse(body));
     }
@@ -527,6 +534,43 @@ module.exports = NodeHelper.create({
     }
 
     return images;
+  },
+
+  processMetMuseumData: function(config, data) {
+    var self = this;
+    var images = [];
+
+    if (data.objectIDs === null) {
+      return [];
+    }
+
+    if (config.shuffle) {
+      data.objectIDs = shuffle(data.objectIDs);
+    }
+
+    var objectIDs = data.objectIDs.slice(0, Math.min(60, config.maximumEntries));
+    var pendingRequests = objectIDs.length;
+
+    for (var id of objectIDs) {
+      var url = `https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`;
+
+      request(url, function (error, response, body) {
+        var obj = JSON.parse(body);
+
+        if (obj.isPublicDomain) {
+          images.push({
+            url: obj.primaryImageSmall,
+            caption: `${obj.title} - ${obj.artistDisplayName}`,
+          });
+        }
+
+        if (--pendingRequests === 0) {
+          self.cacheResult(config, images);
+        }
+      });
+    }
+
+    return [];
   },
 
   getCacheEntry: function(config) {

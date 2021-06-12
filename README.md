@@ -67,6 +67,7 @@ The following properties can be configured:
 |`"synology-moments:<url>"`|Cycles through the latest images from the specified Synology moments album.|
 |`"/r/<subreddit>"`|Cycles through the most recent `hot` image posts from the subreddit.|
 |`"/user/<username>/m/<subreddit>"`|Cycles through the most recent `hot` image posts from the your multireddit.|
+|`"metmuseum:<departmentID>,<isHightlight>,<q>"`|Cycle through collections in the Metropolitan Museum of Art. [departmentID](https://collectionapi.metmuseum.org/public/collection/v1/departments) is a number specifying collection type, e.g., Asian art, paintings etc. Multiple departmentID can be combined as `"departmentID1\|departmentID2"`. `<isHightlight>` is a `boolean` to show only highlighted artwork if set to `true`. `<q>` is keyword, e.g. artist name, culture, etc. All fields can be set to the wildcard `*`. For example, `"metmuseum:11,true,*"` would display highlighted European paintings.|
 
 Source-specific configuration items:
 
