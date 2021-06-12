@@ -172,11 +172,12 @@ Module.register("MMM-Wallpaper", {
     var self = this;
     var viewport = self.getViewport();
     var fitVerticalWidth = image.naturalWidth * viewport.height / image.naturalHeight;
+    var sizePolicy = (self.config.size === "contain") ? "contain" : "cover";
 
     if (fitVerticalWidth >= viewport.width) {
-      return `wallpaper ${self.config.size}-wide`;
+      return `wallpaper ${sizePolicy}-wide`;
     } else {
-      return `wallpaper ${self.config.size}-tall`;
+      return `wallpaper ${sizePolicy}-tall`;
     }
   },
 
