@@ -96,29 +96,29 @@ module.exports = NodeHelper.create({
       self.iCloudState = "webstream";
       self.request(config, {
         method: "POST",
-        url: `https://p04-sharedstreams.icloud.com/${config.source.substring(7)}/sharedstreams/webstream`,
+        url: `https://p04-sharedstreams.icloud.com/${config.source.substring(7).trim()}/sharedstreams/webstream`,
         body: '{"streamCtag":null}',
       });
     } else if (source.startsWith("flickr-group:")) {
       self.request(config, {
-        url: `https://api.flickr.com/services/feeds/groups_pool.gne?format=json&id=${config.source.substring(13)}`,
+        url: `https://api.flickr.com/services/feeds/groups_pool.gne?format=json&id=${config.source.substring(13).trim()}`,
       });
     } else if (source.startsWith("flickr-user:")) {
       self.request(config, {
-        url: `https://api.flickr.com/services/feeds/photos_public.gne?format=json&id=${config.source.substring(12)}`,
+        url: `https://api.flickr.com/services/feeds/photos_public.gne?format=json&id=${config.source.substring(12).trim()}`,
       });
     } else if (source.startsWith("flickr-user-faves:")) {
       self.request(config, {
-        url: `https://api.flickr.com/services/feeds/photos_faves.gne?format=json&id=${config.source.substring(18)}`,
+        url: `https://api.flickr.com/services/feeds/photos_faves.gne?format=json&id=${config.source.substring(18).trim()}`,
       });
     } else if (source.startsWith("lightroom:")) {
       self.request(config, {
-        url: `https://${config.source.substring(10)}`,
+        url: `https://${config.source.substring(10).trim()}`,
       });
     } else if (source.startsWith("synology-moments:")) {
       self.synologyMomentsState = "create_session";
       self.request(config, {
-        url: config.source.substring(17),
+        url: config.source.substring(17).trim(),
       });
     } else if (source.startsWith("metmuseum:")) {
       var args = config.source.substring(10).split(",");
@@ -135,7 +135,7 @@ module.exports = NodeHelper.create({
   readdir: function(config) {
     var self = this;
     var result = self.getCacheEntry(config);
-    const path = config.source.substring(6);
+    const path = config.source.substring(6).trim();
 
     if (!(result.key in self.handlers)) {
       var handler = express.static(path);
@@ -313,7 +313,7 @@ module.exports = NodeHelper.create({
 
   processiCloudData: function(response, body, config) {
     var self = this;
-    var album = config.source.substring(7);
+    var album = config.source.substring(7).trim();
     var images = [];
 
     if (self.iCloudState === "webstream") {
@@ -457,7 +457,7 @@ module.exports = NodeHelper.create({
 
   processSynologyMomentsData: function(response, body, config) {
     var self = this;
-    var url = new URL(config.source.substring(17));
+    var url = new URL(config.source.substring(17).trim());
     var last_slash = url.pathname.lastIndexOf("/");
     var api_path = `${url.pathname.substring(0, last_slash)}/webapi/entry.cgi`;
     var api_url = `${url.protocol}//${url.host}${api_path}`;
