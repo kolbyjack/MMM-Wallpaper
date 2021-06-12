@@ -248,9 +248,7 @@ module.exports = NodeHelper.create({
     var orientation = (config.orientation === "vertical") ? "portrait" : "landscape";
 
     var images = [];
-    for (var i in data.photos) {
-      var image = data.photos[i];
-
+    for (var image of data.photos) {
       images.push({
         url: image.src[orientation],
         caption: `Photographer: ${image.photographer}`,
@@ -267,9 +265,7 @@ module.exports = NodeHelper.create({
     var suffix = `_${width}x${height}.jpg`;
 
     var images = [];
-    for (var i in data.images) {
-      var image = data.images[i];
-
+    for (var image of data.images) {
       images.push({
         url: `https://www.bing.com${image.urlbase}${suffix}`,
         caption: image.copyright,
@@ -283,9 +279,7 @@ module.exports = NodeHelper.create({
     var self = this;
 
     var images = [];
-    for (var i in data.data.children) {
-      var post = data.data.children[i];
-
+    for (var post of data.data.children) {
       if (post.kind === "t3"
           && !post.data.pinned
           && !post.data.stickied
@@ -345,9 +339,8 @@ module.exports = NodeHelper.create({
         var loc = body.locations[p.url_location];
         var host = loc.hosts[Math.floor(Math.random() * loc.hosts.length)];
 
-        for (var i in self.iCloudPhotos) {
-          for (var d in self.iCloudPhotos[i].derivatives) {
-            var m = self.iCloudPhotos[i].derivatives[d];
+        for (var photo of self.iCloudPhotos) {
+          for (var m of photo.derivatives) {
             if (m.checksum === checksum) {
               m.url = `${loc.scheme}://${host}${p.url_path}`;
               break;
@@ -363,9 +356,7 @@ module.exports = NodeHelper.create({
           variants: [],
         };
 
-        for (var i in p.derivatives) {
-          var d = p.derivatives[i];
-
+        for (var d of p.derivatives) {
           if (+d.width > 0) {
             result.variants.push({
               url: d.url,
@@ -390,8 +381,7 @@ module.exports = NodeHelper.create({
     var data = JSON.parse(body.replace(/^[^{]*/, "").replace(/[^}]*$/, ""));
 
     var images = [];
-    for (var i in data.items) {
-      var post = data.items[i];
+    for (var post of data.items) {
       var url = post.media.m;
 
       if (config.flickrHighRes) {
@@ -420,15 +410,15 @@ module.exports = NodeHelper.create({
     }
 
     var images = [];
-    for (var i in data) {
-      var variants = data[i].substring(13).split(",");
+    for (var srcset of data) {
+      var variants = srcset.substring(13).split(",");
       var result = {
         url: null,
         variants: [],
       };
 
-      for (var i in variants) {
-        var d = variants[i].split(" ");
+      for (var v of variants) {
+        var d = v.split(" ");
         var width = Number.parseInt(d[1]);
 
         if (width > 0) {
