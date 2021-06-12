@@ -136,12 +136,13 @@ module.exports = NodeHelper.create({
     var self = this;
     var result = self.getCacheEntry(config);
     const path = config.source.substring(6).trim();
+    const urlPath = `/${self.name}/images/${result.key}/`;
 
     if (!(result.key in self.handlers)) {
       var handler = express.static(path);
 
       self.handlers[result.key] = handler;
-      self.expressApp.use(`/${self.name}/images/${result.key}/`, handler);
+      self.expressApp.use(urlPath, handler);
     }
 
     async function processDir() {
@@ -151,7 +152,7 @@ module.exports = NodeHelper.create({
       for (const dirent of dir) {
         if (dirent.toLowerCase().match(/\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/) !== null) {
           images.push({
-            url: `/${self.name}/images/${result.key}/${dirent}`,
+            url: `${urlPath}${dirent}`,
           });
         }
       }
