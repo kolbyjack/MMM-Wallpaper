@@ -345,7 +345,8 @@ module.exports = NodeHelper.create({
         var host = loc.hosts[Math.floor(Math.random() * loc.hosts.length)];
 
         for (var photo of self.iCloudPhotos) {
-          for (var m of photo.derivatives) {
+          for (var d in photo.derivatives) {
+            var m = photo.derivatives[d];
             if (m.checksum === checksum) {
               m.url = `${loc.scheme}://${host}${p.url_path}`;
               break;
@@ -361,7 +362,9 @@ module.exports = NodeHelper.create({
           variants: [],
         };
 
-        for (var d of p.derivatives) {
+        for (var i in p.derivatives) {
+          var d = p.derivatives[i];
+
           if (+d.width > 0) {
             result.variants.push({
               url: d.url,
