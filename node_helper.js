@@ -1,7 +1,6 @@
 "use strict";
 
 const NodeHelper = require("node_helper");
-const request = require("request");
 const fs = require("fs");
 const express = require("express");
 const crypto = require("crypto");
@@ -183,18 +182,14 @@ module.exports = NodeHelper.create({
       params.headers["cache-control"] = "no-cache";
     }
 
-    request(params,
-      function(error, response, body) {
-        if (error) {
-          self.sendSocketNotification("FETCH_ERROR", { error: error });
-          return console.error(` ERROR - MMM-Wallpaper: ${error}`);
-        }
+    const module = params.url.startsWith("http:") ? http : https;
+    const req = module.request(params.url, params, res => {
+      var body = "";
+      res.on("data", chunk => body += chunk);
+      res.on("end", () => self.processResponse(res, body, config));
+    });
 
-        if (response.statusCode < 400 && body.length > 0) {
-          self.processResponse(response, body, config);
-        }
-      }
-    );
+    req.end(params.body);
   },
 
   cacheResult: function(config, images) {
@@ -553,19 +548,23 @@ module.exports = NodeHelper.create({
     for (var id of objectIDs) {
       var url = `https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`;
 
-      request(url, function (error, response, body) {
-        var obj = JSON.parse(body);
+      http.get(url, res => {
+        var body = "";
+        res.on("data", chunk => body += chunk);
+        res.on("end", () => {
+          var obj = JSON.parse(body)
 
-        if (obj.isPublicDomain) {
-          images.push({
-            url: obj.primaryImageSmall,
-            caption: `${obj.title} - ${obj.artistDisplayName}`,
-          });
-        }
+          if (obj.isPublicDomain) {
+            images.push({
+              url: obj.primaryImageSmall,
+              caption: `${obj.title} - ${obj.artistDisplayName}`,
+            });
+          }
 
-        if (--pendingRequests === 0) {
-          self.cacheResult(config, images);
-        }
+          if (--pendingRequests === 0) {
+            self.cacheResult(config, images);
+          }
+        });
       });
     }
 
