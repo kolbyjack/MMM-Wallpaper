@@ -45,8 +45,6 @@ Module.register("MMM-Wallpaper", {
     self.content.className = "content";
     self.title.className = "title";
 
-    document.body.insertBefore(self.wrapper, document.body.firstChild);
-
     self.getData();
     setInterval(function() { self.getData(); }, self.config.updateInterval);
 
@@ -155,7 +153,7 @@ Module.register("MMM-Wallpaper", {
   },
 
   getDom: function() {
-    return document.createElement("span");
+    return this.wrapper;
   },
 
   getViewport: function() {
