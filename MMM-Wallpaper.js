@@ -29,7 +29,6 @@ Module.register("MMM-Wallpaper", {
     self.nextImage = null;
     self.loadNextImageTimer = null;
     self.imageIndex = 0;
-    self.imageClasses = {};
 
     self.wrapper = document.createElement("div");
     self.content = document.createElement("div");
@@ -47,13 +46,6 @@ Module.register("MMM-Wallpaper", {
 
     self.getData();
     setInterval(function() { self.getData(); }, self.config.updateInterval);
-
-    window.onresize = () => {
-      self.imageClasses = {};
-      if (self.img !== null) {
-        self.img.onload();
-      }
-    };
   },
 
   notificationReceived: function(notification, payload, sender) {
@@ -110,16 +102,8 @@ Module.register("MMM-Wallpaper", {
     var self = this;
 
     return () => {
-      if (!(img.src in self.imageClasses)) {
-        self.imageClasses[img.src] = self.getWallpaperClasses(img);
-      }
-
-      img.className = `${self.fadeClass} ${self.imageClasses[img.src]}`;
-
-      if (img.style.opacity !== "0") {
-        return;
-      }
-
+      img.className = `wallpaper ${self.fadeClass}`;
+      img.style["object-fit"] = self.config.size;
       img.style.opacity = 1;
       self.title.style.display = "none";
 
@@ -165,19 +149,6 @@ Module.register("MMM-Wallpaper", {
       width: w.innerWidth || e.clientWidth || g.clientWidth,
       height: w.innerHeight || e.clientHeight || g.clientHeight
     };
-  },
-
-  getWallpaperClasses: function(image) {
-    var self = this;
-    var viewport = self.getViewport();
-    var fitVerticalWidth = image.naturalWidth * viewport.height / image.naturalHeight;
-    var sizePolicy = (self.config.size === "contain") ? "contain" : "cover";
-
-    if (fitVerticalWidth >= viewport.width) {
-      return `wallpaper ${sizePolicy}-wide`;
-    } else {
-      return `wallpaper ${sizePolicy}-tall`;
-    }
   },
 
   getImageUrl: function(image) {

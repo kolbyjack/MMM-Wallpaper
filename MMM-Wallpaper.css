@@ -11,27 +11,13 @@
   position: fixed;
   left: 50%;
   top: 50%;
+  width: 100%;
+  height: 100%;
   transform: translateX(-50%) translateY(-50%);
 }
 
 .MMM-Wallpaper .crossfade-image {
   transition: opacity 1s ease-in-out;
-}
-
-.MMM-Wallpaper .cover-tall {
-  width: 100%;
-}
-
-.MMM-Wallpaper .cover-wide {
-  height: 100%;
-}
-
-.MMM-Wallpaper .contain-tall {
-  height: 100%;
-}
-
-.MMM-Wallpaper .contain-wide {
-  width: 100%;
 }
 
 .MMM-Wallpaper .title {
