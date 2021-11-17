@@ -76,3 +76,9 @@ flickr-group, flickr-user, flickr-user-faves:
 |Option|Default|Description|
 |---|---|---|
 |`"flickrHighRes"`|true|Whether to try loading the high-res versions of the returned images.|
+
+http:// or https:// url:
+
+|Option|Default|Description|
+|---|---|---|
+|`"addCacheBuster"`|true|Whether to add a cache-busting argument to the query string (`mmm-wallpaper-ts`).|

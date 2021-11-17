@@ -17,6 +17,7 @@ Module.register("MMM-Wallpaper", {
     size: "cover",
     flickrHighRes: true,
     shuffle: true,
+    addCacheBuster: true,
   },
 
   getStyles: function() {

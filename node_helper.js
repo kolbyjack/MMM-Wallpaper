@@ -57,7 +57,6 @@ module.exports = NodeHelper.create({
   fetchWallpapers: function(config) {
     var self = this;
     var result = self.getCacheEntry(config);
-    var url;
     var method = "GET";
     var body = undefined;
 
@@ -75,7 +74,11 @@ module.exports = NodeHelper.create({
     } else if (source.startsWith("local:")) {
       self.readdir(config);
     } else if (source.startsWith("http://") || source.startsWith("https://")) {
-      self.cacheResult(config, [{"url": config.source}]);
+      let url = config.source;
+      if (config.addCacheBuster) {
+        url = `${url}${(url.indexOf("?") != -1) ? "&" : "?"}mmm-wallpaper-ts=${Date.now()}`;
+      }
+      self.cacheResult(config, [{"url": url}]);
     } else if (source.startsWith("/r/")) {
       self.request(config, {
         url: `https://www.reddit.com${config.source}/hot.json`,
