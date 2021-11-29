@@ -42,9 +42,6 @@ Module.register("MMM-Wallpaper", {
     self.wrapper.className = "MMM-Wallpaper";
     self.wrapper.appendChild(self.content);
     self.content.appendChild(self.title);
-    if (self.config.userPresenceAction === "show") {
-        self.hide();
-    }
 
     self.content.className = "content";
     self.title.className = "title";
@@ -56,7 +53,9 @@ Module.register("MMM-Wallpaper", {
   notificationReceived: function(notification, payload, sender) {
     var self = this;
 
-    if (notification === "LOAD_NEXT_WALLPAPER") {
+    if (notification === "MODULE_DOM_CREATED" && self.config.userPresenceAction === "show") {
+      self.hide();
+    } else if (notification === "LOAD_NEXT_WALLPAPER") {
       self.loadNextImage();
     } else if (notification === "USER_PRESENCE") {
       if (self.config.userPresenceAction === "show") {
