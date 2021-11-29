@@ -13,6 +13,12 @@ Clone this repository:
 git clone https://github.com/kolbyjack/MMM-Wallpaper.git
 ````
 
+Install the module dependencies:
+````
+cd MMM-Wallpaper
+npm install
+````
+
 Configure the module in your `config.js` file.
 
 **Note:** After starting the Mirror, it will take a few seconds before the wallpapers start to appear.
