@@ -43,7 +43,7 @@ Module.register("MMM-Wallpaper", {
     self.wrapper.appendChild(self.content);
     self.content.appendChild(self.title);
     if (self.config.userPresenceAction === "show") {
-        self.wrapper.style.display = "none";
+        self.hide();
     }
 
     self.content.className = "content";
@@ -60,9 +60,9 @@ Module.register("MMM-Wallpaper", {
       self.loadNextImage();
     } else if (notification === "USER_PRESENCE") {
       if (self.config.userPresenceAction === "show") {
-        self.wrapper.style.display = payload ? "" : "none";
+        payload ? self.show() : self.hide();
       } else if (self.config.userPresenceAction === "hide") {
-        self.wrapper.style.display = payload ? "none" : "";
+        payload ? self.hide() : self.show();
       }
     }
   },
