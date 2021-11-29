@@ -18,6 +18,7 @@ Module.register("MMM-Wallpaper", {
     flickrHighRes: true,
     shuffle: true,
     addCacheBuster: true,
+    userPresenceAction: "none",
   },
 
   getStyles: function() {
@@ -41,6 +42,9 @@ Module.register("MMM-Wallpaper", {
     self.wrapper.className = "MMM-Wallpaper";
     self.wrapper.appendChild(self.content);
     self.content.appendChild(self.title);
+    if (self.config.userPresenceAction === "show") {
+        self.wrapper.style.display = "none";
+    }
 
     self.content.className = "content";
     self.title.className = "title";
@@ -54,6 +58,12 @@ Module.register("MMM-Wallpaper", {
 
     if (notification === "LOAD_NEXT_WALLPAPER") {
       self.loadNextImage();
+    } else if (notification === "USER_PRESENCE") {
+      if (self.config.userPresenceAction === "show") {
+        self.wrapper.style.display = payload ? "" : "none";
+      } else if (self.config.userPresenceAction === "hide") {
+        self.wrapper.style.display = payload ? "none" : "";
+      }
     }
   },
 

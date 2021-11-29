@@ -57,6 +57,7 @@ The following properties can be configured:
 |`nsfw`|`true`|Whether to allow 18+ images to be chosen (only supported for reddit sources).|
 |`shuffle`|`true`|Whether to randomly select images from those sources that support it, or cycle through the latest.|
 |`size`|`cover`|Sizing policy for images.  Similar to CSS [background-size](https://www.w3schools.com/cssref/css3_pr_background-size.asp).  Choices are "cover," "contain," and "auto."|
+|`userPresenceAction`|`"none"`|What action to take when a `USER_PRESENCE` notification is received.  Choices are "none," "show," and "hide."|
 
 |Source|Description|
 |---|---|
