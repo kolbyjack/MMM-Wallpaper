@@ -90,3 +90,13 @@ http:// or https:// url:
 |Option|Default|Description|
 |---|---|---|
 |`"addCacheBuster"`|true|Whether to add a cache-busting argument to the query string (`mmm-wallpaper-ts`).|
+
+## Notifications
+
+MMM-Wallpaper can react to the following notifications sent by other modules:
+
+|Notification|Payload|Description|
+|---|---|---|
+|`LOAD_NEXT_WALLPAPER`|`none`|Will load the next wallpaper from the configured source.|
+|`UPDATE_WALLPAPER_CONFIG`|`string` or `object`|If the payload is a string, the module will use it as the new source to begin loading wallpapers.  If the payload is an object, the module will update its configuration with the object's properties.  In either case, a new wallpaper will immediately be loaded and the update timer will be reset.|
+|`USER_PRESENCE`|`bool`|Will take the appropriate action to hide or show itself based on the value of the payload and the configured `userPresnseAction`.|

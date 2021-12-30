@@ -37,7 +37,6 @@ Module.register("MMM-Wallpaper", {
     self.img = null;
     self.nextImg = null;
     self.title = document.createElement("div");
-    self.fadeClass = self.config.crossfade ? "crossfade-image" : "";
 
     self.wrapper.className = "MMM-Wallpaper";
     self.wrapper.appendChild(self.content);
@@ -47,7 +46,7 @@ Module.register("MMM-Wallpaper", {
     self.title.className = "title";
 
     self.getData();
-    setInterval(function() { self.getData(); }, self.config.updateInterval);
+    self.updateTimer = setInterval(() => self.getData(), self.config.updateInterval);
   },
 
   notificationReceived: function(notification, payload, sender) {
@@ -63,6 +62,16 @@ Module.register("MMM-Wallpaper", {
       } else if (self.config.userPresenceAction === "hide") {
         payload ? self.hide() : self.show();
       }
+    } else if (notification === "UPDATE_WALLPAPER_CONFIG") {
+      if (payload instanceof String) {
+        self.config.source = payload;
+      } else {
+        Object.assign(self.config, payload);
+      }
+
+      clearInterval(self.updateTimer);
+      self.getData();
+      self.updateTimer = setInterval(() => self.getData(), self.config.updateInterval);
     }
   },
 
@@ -82,7 +91,7 @@ Module.register("MMM-Wallpaper", {
           self.loadNextImage();
 
           if (self.config.slideInterval > 0) {
-            self.loadNextImageTimer = setTimeout(function() { self.loadNextImage(); }, self.config.slideInterval);
+            self.loadNextImageTimer = setTimeout(() => self.loadNextImage(), self.config.slideInterval);
           }
         }
       }
@@ -112,7 +121,7 @@ Module.register("MMM-Wallpaper", {
     var self = this;
 
     return () => {
-      img.className = `wallpaper ${self.fadeClass}`;
+      img.className = `wallpaper ${self.config.crossfade ? "crossfade-image" : ""}`;
       img.style["object-fit"] = self.config.size;
       img.style.opacity = 1;
       self.title.style.display = "none";
@@ -201,7 +210,7 @@ Module.register("MMM-Wallpaper", {
 
     if (self.config.slideInterval > 0) {
       clearTimeout(self.loadNextImageTimer);
-      self.loadNextImageTimer = setTimeout(function() { self.loadNextImage(); }, self.config.slideInterval);
+      self.loadNextImageTimer = setTimeout(() => self.loadNextImage(), self.config.slideInterval);
     }
   },
 });
