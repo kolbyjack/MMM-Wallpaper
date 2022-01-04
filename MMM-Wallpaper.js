@@ -30,7 +30,7 @@ Module.register("MMM-Wallpaper", {
 
     self.nextImage = null;
     self.loadNextImageTimer = null;
-    self.imageIndex = 0;
+    self.imageIndex = -1;
 
     self.wrapper = document.createElement("div");
     self.content = document.createElement("div");
@@ -78,16 +78,18 @@ Module.register("MMM-Wallpaper", {
   socketNotificationReceived: function(notification, payload) {
     var self = this;
 
+    console.log(`MMM-Wallpaper::socketNotificationReceived(${notification}, ${JSON.stringify(payload)})`);
     if (notification === "WALLPAPERS") {
+      console.log(`MMM-Wallpaper::socketNotificationReceived: orientation=${self.getOrientation}; source=${JSON.stringify(self.config.source)}`);
       if (payload.orientation === self.getOrientation() &&
           ((Array.isArray(self.config.source) && self.config.source.includes(payload.source)) ||
            (!Array.isArray(self.config.source) && self.config.source === payload.source)))
       {
         self.images = payload.images.slice(0, self.config.maximumEntries);
         self.imageIndex = self.imageIndex % (self.images.length || 1);
+        console.log(`MMM-Wallpaper::socketNotificationReceived: images.length=${self.images.length}; imageIndex=${self.imageIndex}; img=${self.img}`);
 
-        if (self.nextImage === null && self.images.length > 0) {
-          self.nextImage = self.images[self.imageIndex];
+        if (self.img === null && self.images.length > 0) {
           self.loadNextImage();
         }
       }
@@ -192,17 +194,20 @@ Module.register("MMM-Wallpaper", {
   loadNextImage: function() {
     var self = this;
 
+    console.log(`MMM-Wallpaper::loadNextImage: imageIndex=${self.imageIndex}; images.length=${self.images.length}; loadNextImageTimer=${self.loadNextImageTimer}; slideInterval=${self.config.slideInterval}; nextImage=${self.nextImage}`);
+
     if (self.config.slideInterval > 0) {
       clearTimeout(self.loadNextImageTimer);
       self.loadNextImageTimer = setTimeout(() => self.loadNextImage(), self.config.slideInterval);
     }
 
-    if (self.nextImg !== null) {
+    if (self.nextImage !== null) {
       return;
     }
 
     self.imageIndex = (self.imageIndex + 1) % self.images.length;
     self.nextImage = self.images[self.imageIndex];
+    console.log(`MMM-Wallpaper::loadNextImage: imageIndex=${self.imageIndex}; nextImage=${self.nextImage}`);
 
     if (self.nextImage !== null) {
       self.nextImg = self.createImage(self.getImageUrl(self.nextImage));
