@@ -89,10 +89,6 @@ Module.register("MMM-Wallpaper", {
         if (self.nextImage === null && self.images.length > 0) {
           self.nextImage = self.images[self.imageIndex];
           self.loadNextImage();
-
-          if (self.config.slideInterval > 0) {
-            self.loadNextImageTimer = setTimeout(() => self.loadNextImage(), self.config.slideInterval);
-          }
         }
       }
     }
@@ -196,6 +192,11 @@ Module.register("MMM-Wallpaper", {
   loadNextImage: function() {
     var self = this;
 
+    if (self.config.slideInterval > 0) {
+      clearTimeout(self.loadNextImageTimer);
+      self.loadNextImageTimer = setTimeout(() => self.loadNextImage(), self.config.slideInterval);
+    }
+
     if (self.nextImg !== null) {
       return;
     }
@@ -206,11 +207,6 @@ Module.register("MMM-Wallpaper", {
     if (self.nextImage !== null) {
       self.nextImg = self.createImage(self.getImageUrl(self.nextImage));
       self.content.insertBefore(self.nextImg, self.title);
-    }
-
-    if (self.config.slideInterval > 0) {
-      clearTimeout(self.loadNextImageTimer);
-      self.loadNextImageTimer = setTimeout(() => self.loadNextImage(), self.config.slideInterval);
     }
   },
 });
