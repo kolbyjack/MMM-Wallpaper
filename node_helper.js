@@ -213,7 +213,7 @@ module.exports = NodeHelper.create({
     cache.expires = Date.now() + config.updateInterval * 0.9;
     cache.images = images;
 
-    console.log(`MMM-Wallpaper::cacheResult: source=${config.source}; images.length=${images.length}; expires=${expires}`);
+    console.log(`MMM-Wallpaper::cacheResult: source=${config.source}; images.length=${images.length}; expires=${cache.expires}`);
 
     self.sendResult(config);
   },
