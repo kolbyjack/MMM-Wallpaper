@@ -163,7 +163,7 @@ module.exports = NodeHelper.create({
 
       for (const dirent of dir) {
         console.log(`MMM-Wallpaper::readdir: Processing ${dirent}`);
-        if (dirent.toLowerCase().match(/\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/) !== null) {
+        if (dirent[0] !== '.' && dirent.toLowerCase().match(/\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/) !== null) {
           images.push({
             url: `${urlPath}${dirent}`,
           });
@@ -213,6 +213,8 @@ module.exports = NodeHelper.create({
     cache.expires = Date.now() + config.updateInterval * 0.9;
     cache.images = images;
 
+    console.log(`MMM-Wallpaper::cacheResult: source=${config.source}; images.length=${images.length}; expires=${expires}`);
+
     self.sendResult(config);
   },
 
@@ -220,6 +222,7 @@ module.exports = NodeHelper.create({
     var self = this;
     var result = self.getCacheEntry(config);
 
+    console.log(`MMM-Wallpaper::sendResult: source=${config.source}; orientation=${config.orientation}; images.length=${result.images.length}; maximumEntries=${config.maximumEntries}`);
     self.sendSocketNotification("WALLPAPERS", {
       "source": config.source,
       "orientation": config.orientation,
