@@ -49,6 +49,7 @@ module.exports = NodeHelper.create({
   socketNotificationReceived: function(notification, payload) {
     var self = this;
 
+    console.log(`MMM-Wallpaper::socketNotificationReceived(${notification}, ${JSON.stringify(payload)})`);
     if (notification === "FETCH_WALLPAPERS") {
       self.fetchWallpapers(payload);
     }
@@ -146,18 +147,22 @@ module.exports = NodeHelper.create({
     const path = config.source.substring(6).trim();
     const urlPath = `/${self.name}/images/${result.key}/`;
 
+    console.log(`MMM-Wallpaper::readdir(${JSON.stringify(config)}): cacheKey=${result.key}; urlPath=${urlPath}`);
     if (!(result.key in self.handlers)) {
       var handler = express.static(path);
 
+      console.log(`MMM-Wallpaper::readdir: Adding express handler`);
       self.handlers[result.key] = handler;
       self.expressApp.use(urlPath, handler);
     }
 
     async function processDir() {
+      console.log(`MMM-Wallpaper::readdir: Reading ${path}`);
       const dir = await fs.promises.readdir(path);
       var images = [];
 
       for (const dirent of dir) {
+        console.log(`MMM-Wallpaper::readdir: Processing ${dirent}`);
         if (dirent.toLowerCase().match(/\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/) !== null) {
           images.push({
             url: `${urlPath}${dirent}`,
@@ -166,6 +171,7 @@ module.exports = NodeHelper.create({
       }
 
       if (config.shuffle) {
+        console.log(`MMM-Wallpaper::readdir: Shuffling ${images.length} images`);
         images = shuffle(images);
       }
 
