@@ -30,7 +30,7 @@ Module.register("MMM-Wallpaper", {
 
     self.nextImage = null;
     self.loadNextImageTimer = null;
-    self.imageIndex = 0;
+    self.imageIndex = -1;
 
     self.wrapper = document.createElement("div");
     self.content = document.createElement("div");
@@ -86,8 +86,7 @@ Module.register("MMM-Wallpaper", {
         self.images = payload.images.slice(0, self.config.maximumEntries);
         self.imageIndex = self.imageIndex % (self.images.length || 1);
 
-        if (self.nextImage === null && self.images.length > 0) {
-          self.nextImage = self.images[self.imageIndex];
+        if (self.img === null && self.images.length > 0) {
           self.loadNextImage();
         }
       }
@@ -197,7 +196,7 @@ Module.register("MMM-Wallpaper", {
       self.loadNextImageTimer = setTimeout(() => self.loadNextImage(), self.config.slideInterval);
     }
 
-    if (self.nextImg !== null) {
+    if (self.nextImage !== null) {
       return;
     }
 

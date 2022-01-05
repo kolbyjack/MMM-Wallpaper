@@ -158,7 +158,7 @@ module.exports = NodeHelper.create({
       var images = [];
 
       for (const dirent of dir) {
-        if (dirent.toLowerCase().match(/\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/) !== null) {
+        if (dirent[0] !== '.' && dirent.toLowerCase().match(/\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/) !== null) {
           images.push({
             url: `${urlPath}${dirent}`,
           });
