@@ -19,6 +19,7 @@ Module.register("MMM-Wallpaper", {
     shuffle: true,
     addCacheBuster: true,
     userPresenceAction: "none",
+    wallpaper: true,
   },
 
   getStyles: function() {
@@ -44,6 +45,11 @@ Module.register("MMM-Wallpaper", {
 
     self.content.className = "content";
     self.title.className = "title";
+    
+    if(!self.config.wallpaper) {
+      self.content.className += "_image";
+      self.title.className += "_image";
+    }
 
     self.getData();
     self.updateTimer = setInterval(() => self.getData(), self.config.updateInterval);
@@ -116,7 +122,9 @@ Module.register("MMM-Wallpaper", {
     var self = this;
 
     return () => {
-      img.className = `wallpaper ${self.config.crossfade ? "crossfade-image" : ""}`;
+      img.className = self.config.wallpaper ? "wallpaper" : "image";
+			img.className += self.config.crossfade ? " crossfade-image" : "";
+
       img.style["object-fit"] = self.config.size;
       img.style.opacity = 1;
       self.title.style.display = "none";
@@ -159,10 +167,21 @@ Module.register("MMM-Wallpaper", {
     var e = document.documentElement;
     var g = document.body;
 
-    return {
-      width: w.innerWidth || e.clientWidth || g.clientWidth,
-      height: w.innerHeight || e.clientHeight || g.clientHeight
-    };
+    if(!self.config) {
+      return {width:1, height:1};
+    }
+
+    if(self.config.wallpaper) {
+      return {
+        width: w.innerWidth || e.clientWidth || g.clientWidth,
+        height: w.innerHeight || e.clientHeight || g.clientHeight
+      };
+    } else {
+      return {
+        width: self.content.clientWidth,
+        height: self.content.clientHeight
+      };
+    }
   },
 
   getImageUrl: function(image) {
