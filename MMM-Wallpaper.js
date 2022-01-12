@@ -19,6 +19,9 @@ Module.register("MMM-Wallpaper", {
     shuffle: true,
     addCacheBuster: true,
     userPresenceAction: "none",
+    fillRegion: true,
+    width: "auto",
+    height: "auto",
   },
 
   getStyles: function() {
@@ -42,7 +45,13 @@ Module.register("MMM-Wallpaper", {
     self.wrapper.appendChild(self.content);
     self.content.appendChild(self.title);
 
-    self.content.className = "content";
+    if (self.config.fillRegion) {
+      self.content.className = "content-fill";
+    } else {
+      self.content.className = "content";
+      self.content.style.width = self.config.width;
+      self.content.style.height = self.config.height;
+    }
     self.title.className = "title";
 
     self.getData();
@@ -117,7 +126,6 @@ Module.register("MMM-Wallpaper", {
 
     return () => {
       img.className = `wallpaper ${self.config.crossfade ? "crossfade-image" : ""}`;
-      img.style["object-fit"] = self.config.size;
       img.style.opacity = 1;
       self.title.style.display = "none";
 
@@ -143,6 +151,7 @@ Module.register("MMM-Wallpaper", {
     var img = document.createElement("img");
 
     img.style.filter = self.config.filter;
+    img.style["object-fit"] = self.config.size;
     img.style.opacity = 0;
     img.onload = self.onImageLoaded(img);
     img.src = url;

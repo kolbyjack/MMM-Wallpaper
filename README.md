@@ -59,6 +59,9 @@ The following properties can be configured:
 |`shuffle`|`true`|Whether to randomly select images from those sources that support it, or cycle through the latest.|
 |`size`|`cover`|Sizing policy for images.  Similar to CSS [background-size](https://www.w3schools.com/cssref/css3_pr_background-size.asp).  Choices are "cover," "contain," and "auto."|
 |`userPresenceAction`|`"none"`|What action to take when a `USER_PRESENCE` notification is received.  Choices are "none," "show," and "hide."|
+|`fillRegion`|`true`|Whether to fill the region where the module is positioned, or to add a div in the normal flow of the page.  When set to `false`, the `width` and `height` properties may be set to restrict the size of the module.|
+|`width`|`"auto"`|Width of the content when `fillRegion` is `false`.|
+|`height`|`"auto"`|Height of the content when `fillRegion` is `false`.|
 
 |Source|Description|
 |---|---|
