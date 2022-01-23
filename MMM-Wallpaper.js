@@ -201,8 +201,8 @@ Module.register("MMM-Wallpaper", {
     var self = this;
 
     if (self.config.slideInterval > 0) {
-      clearTimeout(self.loadNextImageTimer);
-      self.loadNextImageTimer = setTimeout(() => self.loadNextImage(), self.config.slideInterval);
+      clearInterval(self.loadNextImageTimer);
+      self.loadNextImageTimer = setInterval(() => self.loadNextImage(), self.config.slideInterval);
     }
 
     if (self.nextImage !== null) {
