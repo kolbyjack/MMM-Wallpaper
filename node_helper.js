@@ -582,17 +582,18 @@ module.exports = NodeHelper.create({
     const self = this;
     const args = config.source.substring(11).split('/').filter(s => s.length > 0);
 
-    console.log(JSON.stringify(args));
-    if (args.length < 2) {
-      return;
-    }
-
     if (!self.flickr) {
       self.flickr = new Flickr(config.flickrApiKey);
       self.flickr.favorites.getPhotos = self.flickr.favorites.getList;
+
+      self.feeds = new Flickr.Feeds();
     }
 
-    if (args[0] === "photos") {
+    if (args[0] === "publicPhotos") {
+      self.feeds.publicPhotos().then(res => {
+        self.processFlickrFeedPhotos(config, res.body.items);
+      });
+    } else if (args[0] === "photos" && args.length > 1) {
       if (args.length === 4 && args[2] === "galleries") {
         self.fetchFlickrApiPhotos(config, "galleries", "photos", {
           gallery_id: args[3],
@@ -623,7 +624,7 @@ module.exports = NodeHelper.create({
           }
         });
       }
-    } else if (args[0] === "groups") {
+    } else if (args[0] === "groups" && args.length > 1) {
       self.flickr.urls.lookupGroup({
         url: `https://www.flickr.com/groups/${args[1]}/`,
       }).then(res => {
@@ -644,47 +645,68 @@ module.exports = NodeHelper.create({
     }
 
     source.getPhotos(args).then(res => {
-      console.log(res.body);
-      const photos = res.body[resultType].photo;
-      const images = [];
-      let pendingRequests = photos.length;
+      self.processFlickrPhotos(config, res.body[resultType].photo.map(p => {
+        return {
+          id: p.id,
+          title: p.title,
+          owner: p.ownername,
+        }
+      }));
+    });
+  },
 
-      for (let p of photos) {
-        self.flickr.photos.getSizes({
-          photo_id: p.id,
-        }).then(res => {
-          const result = {
-            url: null,
-            caption: `${p.title} (by ${p.ownername})`,
-            variants: [],
-          };
+  processFlickrFeedPhotos: function(config, items) {
+    const self = this;
 
-          for (let s of res.body.sizes.size) {
-            if (s.media === "photo") {
-              result.variants.push({
-                url: s.source,
-                width: +s.width,
-                height: +s.height,
-              });
-            }
-          }
-
-          if (result.variants.length > 0) {
-            result.variants.sort((a, b) => { return a.width * a.height - b.width * b.height; });
-            result.url = result.variants[result.variants.length - 1].url;
-            images.push(result);
-          }
-
-          if (--pendingRequests === 0) {
-            self.cacheResult(config, images);
-          }
-        }).catch(err => {
-          if (--pendingRequests === 0) {
-            self.cacheResult(config, images);
-          }
-        });
+    self.processFlickrPhotos(config, items.map(i => {
+      return {
+        id: i.link.split("/").filter(s => s.length > 0).slice(-1)[0],
+        title: i.title,
+        owner: i.author.split('"').filter(s => s.length > 0).slice(-2)[0],
       }
-    }).catch(err => console.error(err));
+    }));
+  },
+
+  processFlickrPhotos: function(config, photos) {
+    const self = this;
+    const images = [];
+    let pendingRequests = photos.length;
+
+    for (let p of photos) {
+      self.flickr.photos.getSizes({
+        photo_id: p.id,
+      }).then(res => {
+        const result = {
+          url: null,
+          caption: `${p.title} (by ${p.owner})`,
+          variants: [],
+        };
+
+        for (let s of res.body.sizes.size) {
+          if (s.media === "photo") {
+            result.variants.push({
+              url: s.source,
+              width: +s.width,
+              height: +s.height,
+            });
+          }
+        }
+
+        if (result.variants.length > 0) {
+          result.variants.sort((a, b) => { return a.width * a.height - b.width * b.height; });
+          result.url = result.variants[result.variants.length - 1].url;
+          images.push(result);
+        }
+
+        if (--pendingRequests === 0) {
+          self.cacheResult(config, images);
+        }
+      }).catch(err => {
+        if (--pendingRequests === 0) {
+          self.cacheResult(config, images);
+        }
+      });
+    }
   },
 
   getCacheEntry: function(config) {
