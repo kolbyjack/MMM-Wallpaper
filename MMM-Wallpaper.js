@@ -21,6 +21,7 @@ Module.register("MMM-Wallpaper", {
     fillRegion: true,
     width: "auto",
     height: "auto",
+    flickrApiKey: "",
   },
 
   getStyles: function() {
