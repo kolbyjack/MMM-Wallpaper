@@ -108,18 +108,6 @@ module.exports = NodeHelper.create({
         url: `https://p04-sharedstreams.icloud.com/${config.source.substring(7).trim()}/sharedstreams/webstream`,
         body: '{"streamCtag":null}',
       });
-    } else if (source.startsWith("flickr-group:")) {
-      self.request(config, {
-        url: `https://api.flickr.com/services/feeds/groups_pool.gne?format=json&id=${config.source.substring(13).trim()}`,
-      });
-    } else if (source.startsWith("flickr-user:")) {
-      self.request(config, {
-        url: `https://api.flickr.com/services/feeds/photos_public.gne?format=json&id=${config.source.substring(12).trim()}`,
-      });
-    } else if (source.startsWith("flickr-user-faves:")) {
-      self.request(config, {
-        url: `https://api.flickr.com/services/feeds/photos_faves.gne?format=json&id=${config.source.substring(18).trim()}`,
-      });
     } else if (source.startsWith("flickr-api:")) {
       self.fetchFlickrApi(config);
     } else if (source.startsWith("lightroom:")) {
@@ -233,8 +221,6 @@ module.exports = NodeHelper.create({
       images = self.processRedditData(config, JSON.parse(body));
     } else if (source.startsWith("icloud:")) {
       images = self.processiCloudData(response, JSON.parse(body), config);
-    } else if (source.startsWith("flickr-")) {
-      images = self.processFlickrData(config, body);
     } else if (source === "pexels") {
       images = self.processPexelsData(config, JSON.parse(body));
     } else if (source.startsWith("lightroom:")) {
@@ -385,31 +371,6 @@ module.exports = NodeHelper.create({
 
         return result;
       });
-    }
-
-    return images;
-  },
-
-  processFlickrData: function(config, body) {
-    var self = this;
-    var data = JSON.parse(body.replace(/^[^{]*/, "").replace(/[^}]*$/, ""));
-
-    var images = [];
-    for (var post of data.items) {
-      var url = post.media.m;
-
-      if (parseBool(config.flickrHighRes)) {
-        url = url.replace(/_m\./, "_h.");
-      }
-
-      images.push({
-        url: url,
-        caption: post.title,
-      });
-
-      if (images.length === config.maximumEntries) {
-        break;
-      }
     }
 
     return images;

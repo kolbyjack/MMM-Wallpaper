@@ -68,9 +68,6 @@ The following properties can be configured:
 |`"bing"`|Cycles through the most recent daily wallpapers from Bing.|
 |`"chromecast"`|Cycles through random selections of the Chromecast wallpapers (thanks TheLukaBoss).|
 |`"firetv"`|Cycles through random selections of the FireTV wallpapers.|
-|`"flickr-group:<id>"`|Cycles through random selections of the specified flickr group's photos.|
-|`"flickr-user:<id>"`|Cycles through random selections of specified flickr user's photos.|
-|`"flickr-user-faves:<id>"`|Cycles through random selections of specified flickr user's favorite photos.|
 |`"http(s)://url"`|Reloads the specified url at the configured interval.|
 |`"icloud:<album id>"`|Cycles through random selections of the specified album.|
 |`"lightroom:<user.myportfolio.com/album>"`|Cycles through random selections of the specified album.|
@@ -81,12 +78,6 @@ The following properties can be configured:
 |`"metmuseum:<departmentID>,<isHightlight>,<q>"`|Cycle through collections in the Metropolitan Museum of Art. [departmentID](https://collectionapi.metmuseum.org/public/collection/v1/departments) is a number specifying collection type, e.g., Asian art, paintings etc. Multiple departmentID can be combined as `"departmentID1\|departmentID2"`. `<isHightlight>` is a `boolean` to show only highlighted artwork if set to `true`. `<q>` is keyword, e.g. artist name, culture, etc. All fields can be set to the wildcard `*`. For example, `"metmuseum:11,true,*"` would display highlighted European paintings.|
 
 Source-specific configuration items:
-
-flickr-group, flickr-user, flickr-user-faves:
-
-|Option|Default|Description|
-|---|---|---|
-|`"flickrHighRes"`|true|Whether to try loading the high-res versions of the returned images.|
 
 http:// or https:// url:
 
