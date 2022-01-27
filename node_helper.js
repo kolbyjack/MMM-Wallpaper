@@ -7,6 +7,7 @@ const express = require("express");
 const crypto = require("crypto");
 const http = require("http");
 const https = require("https");
+const Flickr = require("flickr-sdk");
 
 function shuffle(a) {
   var source = a.slice(0);
@@ -119,6 +120,8 @@ module.exports = NodeHelper.create({
       self.request(config, {
         url: `https://api.flickr.com/services/feeds/photos_faves.gne?format=json&id=${config.source.substring(18).trim()}`,
       });
+    } else if (source.startsWith("flickr-api:")) {
+      self.fetchFlickrApi(config);
     } else if (source.startsWith("lightroom:")) {
       self.request(config, {
         url: `https://${config.source.substring(10).trim()}`,
@@ -573,6 +576,65 @@ module.exports = NodeHelper.create({
     }
 
     return [];
+  },
+
+  fetchFlickrApi: function(config) {
+    const self = this;
+    const args = config.source.substring(11).split('/').filter(s => s.length > 0);
+
+    if (!self.flickr) {
+      self.flickr = new Flickr(config.flickrApiKey);
+    }
+
+    self.flickr.urls.lookupUser({
+      url: config.source.substring(11),
+    }).then(res => {
+      self.flickr.people.getPhotos({
+        user_id: res.body.user.id,
+        extras: "owner_name",
+      }).then(res => {
+        let pendingRequests = res.body.photos.photo.length;
+        const images = [];
+
+        for (let p of res.body.photos.photo) {
+          self.flickr.photos.getSizes({
+            photo_id: p.id,
+          }).then(res => {
+            const result = {
+              url: null,
+              caption: `${p.title} (by ${p.ownername})`,
+              variants: [],
+            };
+
+            for (let s of res.body.sizes.size) {
+              if (s.media === "photo") {
+                result.variants.push({
+                  url: s.source,
+                  width: +s.width,
+                  height: +s.height,
+                });
+              }
+            }
+
+            if (result.variants.length > 0) {
+              result.variants.sort((a, b) => { return a.width * a.height - b.width * b.height; });
+              result.url = result.variants[result.variants.length - 1].url;
+              images.push(result);
+            }
+
+            if (--pendingRequests === 0) {
+              self.cacheResult(config, images);
+            }
+          }).catch(err => {
+            if (--pendingRequests === 0) {
+              self.cacheResult(config, images);
+            }
+          });
+        }
+      }).catch(err => {
+      });
+    }).catch(err => {
+    });
   },
 
   getCacheEntry: function(config) {
