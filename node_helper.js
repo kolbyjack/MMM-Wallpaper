@@ -582,59 +582,109 @@ module.exports = NodeHelper.create({
     const self = this;
     const args = config.source.substring(11).split('/').filter(s => s.length > 0);
 
-    if (!self.flickr) {
-      self.flickr = new Flickr(config.flickrApiKey);
+    console.log(JSON.stringify(args));
+    if (args.length < 2) {
+      return;
     }
 
-    self.flickr.urls.lookupUser({
-      url: config.source.substring(11),
-    }).then(res => {
-      self.flickr.people.getPhotos({
-        user_id: res.body.user.id,
-        extras: "owner_name",
+    if (!self.flickr) {
+      self.flickr = new Flickr(config.flickrApiKey);
+      self.flickr.favorites.getPhotos = self.flickr.favorites.getList;
+    }
+
+    if (args[0] === "photos") {
+      if (args.length === 4 && args[2] === "galleries") {
+        self.fetchFlickrApiPhotos(config, "galleries", "photos", {
+          gallery_id: args[3],
+          extras: "owner_name",
+        });
+      } else {
+        self.flickr.people.findByUsername({
+          username: args[1],
+        }).then(res => {
+          if (args.length === 2) {
+            self.fetchFlickrApiPhotos(config, "people", "photos", {
+              user_id: res.body.user.id,
+              extras: "owner_name",
+            });
+          } else if (args.length === 3 && args[2] === "favorites") {
+            self.fetchFlickrApiPhotos(config, "favorites", "photos", {
+              user_id: res.body.user.id,
+              extras: "owner_name",
+            });
+          } else if (args.length === 4) {
+            if (args[2] === "albums") {
+              self.fetchFlickrApiPhotos(config, "photosets", "photoset", {
+                user_id: res.body.user.id,
+                photoset_id: args[3],
+                extras: "owner_name",
+              });
+            }
+          }
+        });
+      }
+    } else if (args[0] === "groups") {
+      self.flickr.urls.lookupGroup({
+        url: `https://www.flickr.com/groups/${args[1]}/`,
       }).then(res => {
-        let pendingRequests = res.body.photos.photo.length;
-        const images = [];
-
-        for (let p of res.body.photos.photo) {
-          self.flickr.photos.getSizes({
-            photo_id: p.id,
-          }).then(res => {
-            const result = {
-              url: null,
-              caption: `${p.title} (by ${p.ownername})`,
-              variants: [],
-            };
-
-            for (let s of res.body.sizes.size) {
-              if (s.media === "photo") {
-                result.variants.push({
-                  url: s.source,
-                  width: +s.width,
-                  height: +s.height,
-                });
-              }
-            }
-
-            if (result.variants.length > 0) {
-              result.variants.sort((a, b) => { return a.width * a.height - b.width * b.height; });
-              result.url = result.variants[result.variants.length - 1].url;
-              images.push(result);
-            }
-
-            if (--pendingRequests === 0) {
-              self.cacheResult(config, images);
-            }
-          }).catch(err => {
-            if (--pendingRequests === 0) {
-              self.cacheResult(config, images);
-            }
-          });
-        }
-      }).catch(err => {
+        self.fetchFlickrApiPhotos(config, "groups.pools", "photos", {
+          group_id: res.body.group.id,
+          extras: "owner_name",
+        });
       });
-    }).catch(err => {
-    });
+    }
+  },
+
+  fetchFlickrApiPhotos: function(config, sourceType, resultType, args) {
+    const self = this;
+    let source = self.flickr;
+
+    for (let s of sourceType.split(".")) {
+      source = source[s];
+    }
+
+    source.getPhotos(args).then(res => {
+      console.log(res.body);
+      const photos = res.body[resultType].photo;
+      const images = [];
+      let pendingRequests = photos.length;
+
+      for (let p of photos) {
+        self.flickr.photos.getSizes({
+          photo_id: p.id,
+        }).then(res => {
+          const result = {
+            url: null,
+            caption: `${p.title} (by ${p.ownername})`,
+            variants: [],
+          };
+
+          for (let s of res.body.sizes.size) {
+            if (s.media === "photo") {
+              result.variants.push({
+                url: s.source,
+                width: +s.width,
+                height: +s.height,
+              });
+            }
+          }
+
+          if (result.variants.length > 0) {
+            result.variants.sort((a, b) => { return a.width * a.height - b.width * b.height; });
+            result.url = result.variants[result.variants.length - 1].url;
+            images.push(result);
+          }
+
+          if (--pendingRequests === 0) {
+            self.cacheResult(config, images);
+          }
+        }).catch(err => {
+          if (--pendingRequests === 0) {
+            self.cacheResult(config, images);
+          }
+        });
+      }
+    }).catch(err => console.error(err));
   },
 
   getCacheEntry: function(config) {
