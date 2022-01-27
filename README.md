@@ -82,6 +82,9 @@ Source-specific configuration items:
 
 flickr-api:
 
+|Option|Default|Description|
+|`"flickrApiKey"`|`none`|Sign up for an [api key](https://www.flickr.com/services/apps/create/noncommercial/) and enter it here. (Required)|
+
 |Source|Description|
 |publicPhotos|Loads unfiltered public content.|
 |tags/<tags>/<tagmode>|Load public content matching the specified comma-separated tags.  `tagmode` can be `all` or `any` (default `all`).|
