@@ -554,6 +554,13 @@ module.exports = NodeHelper.create({
       self.feeds.publicPhotos().then(res => {
         self.processFlickrFeedPhotos(config, res.body.items);
       });
+    } else if (args[0] === "tags" && args.length > 1) {
+      self.feeds.publicPhotos({
+        tags: args[1],
+        tagmode: (args.length > 2) ? args[2] : "all",
+      }).then(res => {
+        self.processFlickrFeedPhotos(config, res.body.items);
+      });
     } else if (args[0] === "photos" && args.length > 1) {
       if (args.length === 4 && args[2] === "galleries") {
         self.fetchFlickrApiPhotos(config, "galleries", "photos", {
