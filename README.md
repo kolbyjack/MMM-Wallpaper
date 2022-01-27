@@ -68,6 +68,7 @@ The following properties can be configured:
 |`"bing"`|Cycles through the most recent daily wallpapers from Bing.|
 |`"chromecast"`|Cycles through random selections of the Chromecast wallpapers (thanks TheLukaBoss).|
 |`"firetv"`|Cycles through random selections of the FireTV wallpapers.|
+|`"flickr-api:<source>"`|Cycles through random selections of the specified flickr photos.  See below for details.|
 |`"http(s)://url"`|Reloads the specified url at the configured interval.|
 |`"icloud:<album id>"`|Cycles through random selections of the specified album.|
 |`"lightroom:<user.myportfolio.com/album>"`|Cycles through random selections of the specified album.|
@@ -78,6 +79,17 @@ The following properties can be configured:
 |`"metmuseum:<departmentID>,<isHightlight>,<q>"`|Cycle through collections in the Metropolitan Museum of Art. [departmentID](https://collectionapi.metmuseum.org/public/collection/v1/departments) is a number specifying collection type, e.g., Asian art, paintings etc. Multiple departmentID can be combined as `"departmentID1\|departmentID2"`. `<isHightlight>` is a `boolean` to show only highlighted artwork if set to `true`. `<q>` is keyword, e.g. artist name, culture, etc. All fields can be set to the wildcard `*`. For example, `"metmuseum:11,true,*"` would display highlighted European paintings.|
 
 Source-specific configuration items:
+
+flickr-api:
+
+|Source|Description|
+|publicPhotos|Loads unfiltered public content.|
+|tags/<tags>/<tagmode>|Load public content matching the specified comma-separated tags.  `tagmode` can be `all` or `any` (default `all`).|
+|photos/<username>|Load public images from the user's photostream.|
+|photos/<username>/galleries/<gallery id>|Load public images from the user's specified gallery.|
+|photos/<username>/favorites|Load public images from the user's favorites.|
+|photos/<username>/albums/<album id>|Load public images from the user's specified album.
+|groups/<groupname>|Load public images from the group's pool.|
 
 http:// or https:// url:
 
