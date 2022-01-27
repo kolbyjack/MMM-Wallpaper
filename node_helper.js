@@ -546,16 +546,15 @@ module.exports = NodeHelper.create({
     if (!self.flickr) {
       self.flickr = new Flickr(config.flickrApiKey);
       self.flickr.favorites.getPhotos = self.flickr.favorites.getList;
-
-      self.feeds = new Flickr.Feeds();
+      self.flickrFeeds = new Flickr.Feeds();
     }
 
     if (args[0] === "publicPhotos") {
-      self.feeds.publicPhotos().then(res => {
+      self.flickrFeeds.publicPhotos().then(res => {
         self.processFlickrFeedPhotos(config, res.body.items);
       });
     } else if (args[0] === "tags" && args.length > 1) {
-      self.feeds.publicPhotos({
+      self.flickrFeeds.publicPhotos({
         tags: args[1],
         tagmode: (args.length > 2) ? args[2] : "all",
       }).then(res => {
