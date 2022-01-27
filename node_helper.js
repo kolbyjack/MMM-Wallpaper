@@ -637,6 +637,8 @@ module.exports = NodeHelper.create({
   processFlickrPhotos: function(config, photos) {
     const self = this;
     const images = [];
+
+    photos = photos.slice(0, Math.min(60, config.maximumEntries));
     let pendingRequests = photos.length;
 
     for (let p of photos) {
