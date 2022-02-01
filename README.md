@@ -68,9 +68,7 @@ The following properties can be configured:
 |`"bing"`|Cycles through the most recent daily wallpapers from Bing.|
 |`"chromecast"`|Cycles through random selections of the Chromecast wallpapers (thanks TheLukaBoss).|
 |`"firetv"`|Cycles through random selections of the FireTV wallpapers.|
-|`"flickr-group:<id>"`|Cycles through random selections of the specified flickr group's photos.|
-|`"flickr-user:<id>"`|Cycles through random selections of specified flickr user's photos.|
-|`"flickr-user-faves:<id>"`|Cycles through random selections of specified flickr user's favorite photos.|
+|`"flickr-api:<source>"`|Cycles through random selections of the specified flickr photos.  See below for details.|
 |`"http(s)://url"`|Reloads the specified url at the configured interval.|
 |`"icloud:<album id>"`|Cycles through random selections of the specified album.|
 |`"lightroom:<user.myportfolio.com/album>"`|Cycles through random selections of the specified album.|
@@ -82,11 +80,19 @@ The following properties can be configured:
 
 Source-specific configuration items:
 
-flickr-group, flickr-user, flickr-user-faves:
+flickr-api:
 
 |Option|Default|Description|
-|---|---|---|
-|`"flickrHighRes"`|true|Whether to try loading the high-res versions of the returned images.|
+|`"flickrApiKey"`|`none`|Sign up for an [api key](https://www.flickr.com/services/apps/create/noncommercial/) and enter it here. (Required)|
+
+|Source|Description|
+|publicPhotos|Loads unfiltered public content.|
+|tags/<tags>/<tagmode>|Load public content matching the specified comma-separated tags.  `tagmode` can be `all` or `any` (default `all`).|
+|photos/<username>|Load public images from the user's photostream.|
+|photos/<username>/galleries/<gallery id>|Load public images from the user's specified gallery.|
+|photos/<username>/favorites|Load public images from the user's favorites.|
+|photos/<username>/albums/<album id>|Load public images from the user's specified album.
+|groups/<groupname>|Load public images from the group's pool.|
 
 http:// or https:// url:
 

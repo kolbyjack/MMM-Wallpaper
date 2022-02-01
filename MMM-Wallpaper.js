@@ -15,13 +15,13 @@ Module.register("MMM-Wallpaper", {
     maxHeight: Number.MAX_SAFE_INTEGER,
     nsfw: true,
     size: "cover",
-    flickrHighRes: true,
     shuffle: true,
     addCacheBuster: true,
     userPresenceAction: "none",
     fillRegion: true,
     width: "auto",
     height: "auto",
+    flickrApiKey: "",
   },
 
   getStyles: function() {

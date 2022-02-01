@@ -7,6 +7,7 @@ const express = require("express");
 const crypto = require("crypto");
 const http = require("http");
 const https = require("https");
+const Flickr = require("flickr-sdk");
 
 function shuffle(a) {
   var source = a.slice(0);
@@ -107,18 +108,8 @@ module.exports = NodeHelper.create({
         url: `https://p04-sharedstreams.icloud.com/${config.source.substring(7).trim()}/sharedstreams/webstream`,
         body: '{"streamCtag":null}',
       });
-    } else if (source.startsWith("flickr-group:")) {
-      self.request(config, {
-        url: `https://api.flickr.com/services/feeds/groups_pool.gne?format=json&id=${config.source.substring(13).trim()}`,
-      });
-    } else if (source.startsWith("flickr-user:")) {
-      self.request(config, {
-        url: `https://api.flickr.com/services/feeds/photos_public.gne?format=json&id=${config.source.substring(12).trim()}`,
-      });
-    } else if (source.startsWith("flickr-user-faves:")) {
-      self.request(config, {
-        url: `https://api.flickr.com/services/feeds/photos_faves.gne?format=json&id=${config.source.substring(18).trim()}`,
-      });
+    } else if (source.startsWith("flickr-api:")) {
+      self.fetchFlickrApi(config);
     } else if (source.startsWith("lightroom:")) {
       self.request(config, {
         url: `https://${config.source.substring(10).trim()}`,
@@ -230,8 +221,6 @@ module.exports = NodeHelper.create({
       images = self.processRedditData(config, JSON.parse(body));
     } else if (source.startsWith("icloud:")) {
       images = self.processiCloudData(response, JSON.parse(body), config);
-    } else if (source.startsWith("flickr-")) {
-      images = self.processFlickrData(config, body);
     } else if (source === "pexels") {
       images = self.processPexelsData(config, JSON.parse(body));
     } else if (source.startsWith("lightroom:")) {
@@ -382,31 +371,6 @@ module.exports = NodeHelper.create({
 
         return result;
       });
-    }
-
-    return images;
-  },
-
-  processFlickrData: function(config, body) {
-    var self = this;
-    var data = JSON.parse(body.replace(/^[^{]*/, "").replace(/[^}]*$/, ""));
-
-    var images = [];
-    for (var post of data.items) {
-      var url = post.media.m;
-
-      if (parseBool(config.flickrHighRes)) {
-        url = url.replace(/_m\./, "_h.");
-      }
-
-      images.push({
-        url: url,
-        caption: post.title,
-      });
-
-      if (images.length === config.maximumEntries) {
-        break;
-      }
     }
 
     return images;
@@ -573,6 +537,145 @@ module.exports = NodeHelper.create({
     }
 
     return [];
+  },
+
+  fetchFlickrApi: function(config) {
+    const self = this;
+    const args = config.source.substring(11).split('/').filter(s => s.length > 0);
+
+    if (!self.flickr) {
+      self.flickr = new Flickr(config.flickrApiKey);
+      self.flickr.favorites.getPhotos = self.flickr.favorites.getList;
+      self.flickrFeeds = new Flickr.Feeds();
+    }
+
+    if (args[0] === "publicPhotos") {
+      self.flickrFeeds.publicPhotos().then(res => {
+        self.processFlickrFeedPhotos(config, res.body.items);
+      });
+    } else if (args[0] === "tags" && args.length > 1) {
+      self.flickrFeeds.publicPhotos({
+        tags: args[1],
+        tagmode: (args.length > 2) ? args[2] : "all",
+      }).then(res => {
+        self.processFlickrFeedPhotos(config, res.body.items);
+      });
+    } else if (args[0] === "photos" && args.length > 1) {
+      if (args.length === 4 && args[2] === "galleries") {
+        self.fetchFlickrApiPhotos(config, "galleries", "photos", {
+          gallery_id: args[3],
+          extras: "owner_name",
+        });
+      } else {
+        self.flickr.people.findByUsername({
+          username: args[1],
+        }).then(res => {
+          if (args.length === 2) {
+            self.fetchFlickrApiPhotos(config, "people", "photos", {
+              user_id: res.body.user.id,
+              extras: "owner_name",
+            });
+          } else if (args.length === 3 && args[2] === "favorites") {
+            self.fetchFlickrApiPhotos(config, "favorites", "photos", {
+              user_id: res.body.user.id,
+              extras: "owner_name",
+            });
+          } else if (args.length === 4) {
+            if (args[2] === "albums") {
+              self.fetchFlickrApiPhotos(config, "photosets", "photoset", {
+                user_id: res.body.user.id,
+                photoset_id: args[3],
+                extras: "owner_name",
+              });
+            }
+          }
+        });
+      }
+    } else if (args[0] === "groups" && args.length > 1) {
+      self.flickr.urls.lookupGroup({
+        url: `https://www.flickr.com/groups/${args[1]}/`,
+      }).then(res => {
+        self.fetchFlickrApiPhotos(config, "groups.pools", "photos", {
+          group_id: res.body.group.id,
+          extras: "owner_name",
+        });
+      });
+    }
+  },
+
+  fetchFlickrApiPhotos: function(config, sourceType, resultType, args) {
+    const self = this;
+    let source = self.flickr;
+
+    for (let s of sourceType.split(".")) {
+      source = source[s];
+    }
+
+    source.getPhotos(args).then(res => {
+      self.processFlickrPhotos(config, res.body[resultType].photo.map(p => {
+        return {
+          id: p.id,
+          title: p.title,
+          owner: p.ownername,
+        }
+      }));
+    });
+  },
+
+  processFlickrFeedPhotos: function(config, items) {
+    const self = this;
+
+    self.processFlickrPhotos(config, items.map(i => {
+      return {
+        id: i.link.split("/").filter(s => s.length > 0).slice(-1)[0],
+        title: i.title,
+        owner: i.author.split('"').filter(s => s.length > 0).slice(-2)[0],
+      }
+    }));
+  },
+
+  processFlickrPhotos: function(config, photos) {
+    const self = this;
+    const images = [];
+
+    photos = photos.slice(0, Math.min(60, config.maximumEntries));
+    let pendingRequests = photos.length;
+
+    for (let p of photos) {
+      self.flickr.photos.getSizes({
+        photo_id: p.id,
+      }).then(res => {
+        const result = {
+          url: null,
+          caption: `${p.title} (by ${p.owner})`,
+          variants: [],
+        };
+
+        for (let s of res.body.sizes.size) {
+          if (s.media === "photo") {
+            result.variants.push({
+              url: s.source,
+              width: +s.width,
+              height: +s.height,
+            });
+          }
+        }
+
+        if (result.variants.length > 0) {
+          result.variants.sort((a, b) => { return a.width * a.height - b.width * b.height; });
+          result.url = result.variants[result.variants.length - 1].url;
+          images.push(result);
+        }
+
+        if (--pendingRequests === 0) {
+          self.cacheResult(config, images);
+        }
+      }).catch(err => {
+        if (--pendingRequests === 0) {
+          self.cacheResult(config, images);
+        }
+      });
+    }
   },
 
   getCacheEntry: function(config) {
