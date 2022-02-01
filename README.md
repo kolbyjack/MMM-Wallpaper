@@ -83,16 +83,18 @@ Source-specific configuration items:
 flickr-api:
 
 |Option|Default|Description|
+|---|---|---|
 |`"flickrApiKey"`|`none`|Sign up for an [api key](https://www.flickr.com/services/apps/create/noncommercial/) and enter it here. (Required)|
 
 |Source|Description|
-|publicPhotos|Loads unfiltered public content.|
-|tags/<tags>/<tagmode>|Load public content matching the specified comma-separated tags.  `tagmode` can be `all` or `any` (default `all`).|
-|photos/<username>|Load public images from the user's photostream.|
-|photos/<username>/galleries/<gallery id>|Load public images from the user's specified gallery.|
-|photos/<username>/favorites|Load public images from the user's favorites.|
-|photos/<username>/albums/<album id>|Load public images from the user's specified album.
-|groups/<groupname>|Load public images from the group's pool.|
+|---|---|
+|`publicPhotos`|Loads unfiltered public content.|
+|`tags/<tags>/<tagmode>`|Load public content matching the specified comma-separated tags.  `tagmode` can be `all` or `any` (default `all`).|
+|`photos/<username>`|Load public images from the user's photostream.|
+|`photos/<username>/galleries/<gallery id>`|Load public images from the user's specified gallery.|
+|`photos/<username>/favorites`|Load public images from the user's favorites.|
+|`photos/<username>/albums/<album id>`|Load public images from the user's specified album.
+|`groups/<groupname>`|Load public images from the group's pool.|
 
 http:// or https:// url:
 
