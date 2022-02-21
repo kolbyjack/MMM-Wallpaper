@@ -79,7 +79,7 @@ module.exports = NodeHelper.create({
       if (config.addCacheBuster) {
         url = `${url}${(url.indexOf("?") != -1) ? "&" : "?"}mmm-wallpaper-ts=${Date.now()}`;
       }
-      self.cacheResult(config, [{"url": url}]);
+      self.cacheResult(config, [{url: url, type: config.allowedTypes[0]}]);
     } else if (source.startsWith("/r/")) {
       self.request(config, {
         url: `https://www.reddit.com${config.source}/hot.json`,
@@ -146,12 +146,21 @@ module.exports = NodeHelper.create({
 
     async function processDir() {
       const dir = await fs.promises.readdir(path);
+      const imageRegex = /\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/;
+      const videoRegex = /\.(?:mp4|avi|mkv)$/;
       var images = [];
 
       for (const dirent of dir) {
-        if (dirent[0] !== '.' && dirent.toLowerCase().match(/\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/) !== null) {
+        if (dirent[0] === '.') {
+          continue;
+        }
+
+        const fn = dirent.toLowerCase();
+        const type = (fn.match(imageRegex) !== null) ? "image" : (fn.match(videoRegex) ? "video" : null);
+        if (type !== null) {
           images.push({
             url: `${urlPath}${dirent}`,
+            type: type,
           });
         }
       }
@@ -204,11 +213,12 @@ module.exports = NodeHelper.create({
   sendResult: function(config) {
     var self = this;
     var result = self.getCacheEntry(config);
+    const allowedTypes = config.allowedTypes.concat([null, undefined]);
 
     self.sendSocketNotification("WALLPAPERS", {
       "source": config.source,
       "orientation": config.orientation,
-      "images": result.images.slice(0, config.maximumEntries),
+      "images": result.images.filter(i => allowedTypes.indexOf(i.type) !== -1).slice(0, config.maximumEntries),
     });
   },
 

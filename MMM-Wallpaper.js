@@ -4,6 +4,7 @@ Module.register("MMM-Wallpaper", {
   // Default module config
   defaults: {
     source: "bing",
+    allowedTypes: ["image"],
     updateInterval: 60 * 60 * 1000,
     slideInterval: 5 * 60 * 1000,
     maximumEntries: 10,
@@ -159,6 +160,22 @@ Module.register("MMM-Wallpaper", {
     return img;
   },
 
+  createVideo: function(videoData) {
+    const self = this;
+    const video = document.createElement("video");
+
+    video.style.filter = self.config.filter;
+    video.style["object-fit"] = self.config.size;
+    video.style.opacity = 0;
+    video.muted = true;
+    video.loop = true;
+    video.autoplay = true;
+    video.oncanplay = self.onImageLoaded(videoData, video);
+    video.src = self.getImageUrl(videoData);
+
+    return video;
+  },
+
   getDom: function() {
     return this.wrapper;
   },
@@ -212,7 +229,11 @@ Module.register("MMM-Wallpaper", {
 
     const nextImageData = self.images[self.imageIndex];
     if (nextImageData !== null) {
-      self.nextImageElement = self.createImage(nextImageData);
+      if (nextImageData.type === "video") {
+        self.nextImageElement = self.createVideo(nextImageData);
+      } else {
+        self.nextImageElement = self.createImage(nextImageData);
+      }
       self.content.insertBefore(self.nextImageElement, self.title);
     }
   },
