@@ -58,8 +58,6 @@ module.exports = NodeHelper.create({
   fetchWallpapers: function(config) {
     var self = this;
     var result = self.getCacheEntry(config);
-    var method = "GET";
-    var body = undefined;
 
     if (config.maximumEntries <= result.images.length && Date.now() < result.expires) {
       self.sendResult(config);
