@@ -615,6 +615,7 @@ module.exports = NodeHelper.create({
       source = source[s];
     }
 
+    args.per_page = args.per_page || config.maximumEntries;
     source.getPhotos(args).then(res => {
       self.processFlickrPhotos(config, res.body[resultType].photo.map(p => {
         return {
@@ -642,7 +643,7 @@ module.exports = NodeHelper.create({
     const self = this;
     const images = [];
 
-    photos = photos.slice(0, Math.min(60, config.maximumEntries));
+    photos = photos.slice(0, Math.max(60, config.maximumEntries));
     let pendingRequests = photos.length;
 
     for (let p of photos) {
