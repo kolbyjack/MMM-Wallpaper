@@ -36,6 +36,15 @@ function pick(a) {
   }
 }
 
+function b62decode(s) {
+  const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  let result = s.split("").reduce((result, c) => result * 62 + alphabet.indexOf(c), 0);
+  if (result.length === 1) {
+    result = `0${result}`;
+  }
+  return result;
+}
+
 module.exports = NodeHelper.create({
   start: function() {
     var self = this;
@@ -106,10 +115,17 @@ module.exports = NodeHelper.create({
         },
       });
     } else if (source.startsWith("icloud:")) {
+      const album = config.source.substring(7).trim();
+      const partition = b62decode((album[0] === "A") ? album[1] : album.substring(1, 3));
+      self.iCloudHost = `p${partition}-sharedstreams.icloud.com`;
       self.iCloudState = "webstream";
       self.request(config, {
         method: "POST",
-        url: `https://p04-sharedstreams.icloud.com/${config.source.substring(7).trim()}/sharedstreams/webstream`,
+        url: `https://${self.iCloudHost}/${album}/sharedstreams/webstream`,
+        headers: {
+          "Content-Type": "text/plain",
+          "User-Agent": "MagicMirror:MMM-Wallpaper:v1.0 (by /u/kolbyhack)",
+        },
         body: '{"streamCtag":null}',
       });
     } else if (source.startsWith("flickr-api:")) {
@@ -314,7 +330,7 @@ module.exports = NodeHelper.create({
 
     if (self.iCloudState === "webstream") {
       if (response.statusCode === 330) {
-        self.iCloudHost = body["X-Apple-MMe-Host"];
+        self.iCloudHost = body["X-Apple-MMe-Host"] || self.iCloudHost;
         self.request(config, {
           method: "POST",
           url: `https://${self.iCloudHost}/${album}/sharedstreams/webstream`,
