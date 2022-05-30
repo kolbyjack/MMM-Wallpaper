@@ -47,6 +47,7 @@ The following properties can be configured:
 |---|---|---|
 |`source`|`"bing"`|The image source to use.  See table below for supported sources.|
 |`caption`|`true`|Whether to display the image caption/attribution when available.|
+|`fadeEdges`|`false`|Whether to fade the top and bottom 10% of the image.|
 |`updateInterval`|`60 * 60 * 1000`|How often (in ms) to check the source for new wallpapers.|
 |`slideInterval`|`5 * 60 * 1000`|How often (in ms) to change images.|
 |`maximumEntries`|`10`|The maximum number of images to load from the source.|

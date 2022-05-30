@@ -22,6 +22,7 @@ Module.register("MMM-Wallpaper", {
     width: "auto",
     height: "auto",
     flickrApiKey: "",
+    fadeEdges: false,
   },
 
   getStyles: function() {
@@ -35,14 +36,24 @@ Module.register("MMM-Wallpaper", {
     self.imageIndex = -1;
 
     self.wrapper = document.createElement("div");
-    self.content = document.createElement("div");
-    self.imageElement = null;
-    self.nextImageElement = null;
-    self.title = document.createElement("div");
-
     self.wrapper.className = "MMM-Wallpaper";
+
+    self.content = document.createElement("div");
     self.wrapper.appendChild(self.content);
+
+    self.title = document.createElement("div");
+    self.title.className = "title";
     self.content.appendChild(self.title);
+
+    if (self.config.fadeEdges) {
+      self.topGradient = document.createElement("div");
+      self.topGradient.className = "top-gradient";
+      self.content.appendChild(self.topGradient);
+
+      self.bottomGradient = document.createElement("div");
+      self.bottomGradient.className = "bottom-gradient";
+      self.content.appendChild(self.bottomGradient);
+    }
 
     if (self.config.fillRegion) {
       self.content.className = "content-fill";
@@ -51,7 +62,9 @@ Module.register("MMM-Wallpaper", {
       self.content.style.width = self.config.width;
       self.content.style.height = self.config.height;
     }
-    self.title.className = "title";
+
+    self.imageElement = null;
+    self.nextImageElement = null;
 
     self.getData();
     self.updateTimer = setInterval(() => self.getData(), self.config.updateInterval);

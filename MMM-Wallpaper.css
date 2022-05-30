@@ -31,3 +31,21 @@
   font-size: 14px;
   line-height: 25px;
 }
+
+.MMM-Wallpaper .top-gradient {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  height: 10%;
+  background: linear-gradient(black, transparent);
+}
+
+.MMM-Wallpaper .bottom-gradient {
+  position: fixed;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  height: 10%;
+  background: linear-gradient(transparent, black);
+}
