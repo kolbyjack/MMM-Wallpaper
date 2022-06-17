@@ -3,6 +3,7 @@
 const NodeHelper = require("node_helper");
 const request = require("request");
 const fs = require("fs");
+const path = require("path");
 const express = require("express");
 const crypto = require("crypto");
 const http = require("http");
@@ -152,10 +153,11 @@ module.exports = NodeHelper.create({
   },
 
   readdir: function(config) {
-    var self = this;
-    var result = self.getCacheEntry(config);
+    const self = this;
+    const result = self.getCacheEntry(config);
     const path = config.source.substring(6).trim();
     const urlPath = `/${self.name}/images/${result.key}/`;
+    const fileMatcher = /\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/;
 
     if (!(result.key in self.handlers)) {
       var handler = express.static(path);
@@ -164,26 +166,27 @@ module.exports = NodeHelper.create({
       self.expressApp.use(urlPath, handler);
     }
 
-    async function processDir() {
-      const dir = await fs.promises.readdir(path);
-      var images = [];
+    async function getFiles(dir) {
+      const dirents = await fs.promises.readdir(dir, { withFileTypes: true });
+      const files = await Promise.all(dirents.map((dirent) => {
+        const res = path.resolve(dir, dirent.name);
+        return dirent.isDirectory() ? getFiles(res) : res;
+      }));
+      return Array.prototype.concat(...files);
+    }
 
-      for (const dirent of dir) {
-        if (dirent[0] !== '.' && dirent.toLowerCase().match(/\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/) !== null) {
-          images.push({
-            url: `${urlPath}${dirent}`,
-          });
+    getFiles(path)
+      .then(files => {
+        let images = files
+          .filter(file => file.toLowerCase().match(fileMatcher) != null)
+          .map(file => { return { url: `${urlPath}${file}` }; });
+
+        if (config.shuffle) {
+          images = shuffle(images);
         }
-      }
 
-      if (config.shuffle) {
-        images = shuffle(images);
-      }
-
-      self.cacheResult(config, images);
-    };
-
-    processDir();
+        self.cacheResult(config, images);
+      });
   },
 
   request: function(config, params) {
