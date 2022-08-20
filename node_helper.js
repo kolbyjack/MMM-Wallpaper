@@ -607,10 +607,12 @@ module.exports = NodeHelper.create({
     const key = (config.source === "apod") ? "url" : "hdurl";
 
     for (const image of data) {
-      images.unshift({
-        url: image[key],
-        caption: image.title,
-      });
+      if ((image?.media_type === "image") && (key in image)) {
+        images.unshift({
+          url: image[key],
+          caption: image.title,
+        });
+      }
     }
 
     return images;
