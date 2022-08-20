@@ -36,6 +36,10 @@ function pick(a) {
   }
 }
 
+function z(n) {
+  return ((0 <= n && n < 10) ? "0" : "") + n;
+}
+
 function b62decode(s) {
   const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
   let result = s.split("").reduce((result, c) => result * 62 + alphabet.indexOf(c), 0);
@@ -153,6 +157,13 @@ module.exports = NodeHelper.create({
       self.request(config, {
         url: `https://images-api.nasa.gov/search?q=${searchTerm}`
       });
+    } else if ((source === "apod") || (source === "apodhd")) {
+      let startDate = new Date();
+      startDate.setDate(startDate.getDate() - config.maximumEntries);
+      startDate = `${startDate.getFullYear()}-${z(startDate.getMonth() + 1)}-${z(startDate.getDate())}`;
+      self.request(config, {
+        url: `https://api.nasa.gov/planetary/apod?api_key=${config.nasaApiKey}&start_date=${startDate}`,
+      });
     } else {
       self.request(config, {
         url: `https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=${config.maximumEntries}`,
@@ -260,6 +271,8 @@ module.exports = NodeHelper.create({
       images = self.processMetMuseumData(config, JSON.parse(body));
     } else if (source.startsWith("nasa:")) {
       images = self.processNasaData(config, JSON.parse(body));
+    } else if ((source === "apod") || (source === "apodhd")) {
+      images = self.processApodData(config, JSON.parse(body));
     } else {
       images = self.processBingData(config, JSON.parse(body));
     }
@@ -584,6 +597,20 @@ module.exports = NodeHelper.create({
           caption: image?.data[0]?.description?.substring(0, 250)
         });
       }
+    }
+
+    return images;
+  },
+
+  processApodData: function (config, data) {
+    const images = [];
+    const key = (config.source === "apod") ? "url" : "hdurl";
+
+    for (const image of data) {
+      images.unshift({
+        url: image[key],
+        caption: image.title,
+      });
     }
 
     return images;
