@@ -144,6 +144,15 @@ module.exports = NodeHelper.create({
       self.request(config, {
         url: `https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&departmentId=${args[0]}&isHighlight=${args[1]}&q=${args[2]}`,
       });
+    } else if (source.startsWith("nasa:")) {
+      const searchTerm = config.source.split(":")[1];
+      if (!searchTerm || searchTerm?.length === 0 || searchTerm === "") {
+        console.error("MMM-Wallpaper: Please specify search term for NASA API");
+        return;
+      }
+      self.request(config, {
+        url: `https://images-api.nasa.gov/search?q=${searchTerm}`
+      });
     } else {
       self.request(config, {
         url: `https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=${config.maximumEntries}`,
@@ -249,6 +258,8 @@ module.exports = NodeHelper.create({
       images = self.processSynologyMomentsData(response, body, config);
     } else if (source.startsWith("metmuseum:")) {
       images = self.processMetMuseumData(config, JSON.parse(body));
+    } else if (source.startsWith("nasa:")) {
+      images = self.processNasaData(config, JSON.parse(body));
     } else {
       images = self.processBingData(config, JSON.parse(body));
     }
@@ -557,6 +568,25 @@ module.exports = NodeHelper.create({
     }
 
     return [];
+  },
+
+  /* NASA APIs documented under https://api.nasa.gov/.
+    This accesses the NASA Image and Video Library. 
+    Currently, it only loads the thumbnails, which in most cases have good enough quality.
+    For NASA API usage without an API key, there are hourly limits of about 1,000 requests. 
+    */
+  processNasaData: function (config, data) {
+    let images = [];
+    for (const image of data.collection.items) {
+      if (image?.links && image?.links?.length > 0) {
+        images.push({
+          url: image?.links[0]?.href,
+          caption: image?.data[0]?.description?.substring(0, 250)
+        });
+      }
+    }
+
+    return images;
   },
 
   fetchFlickrApi: function(config) {
