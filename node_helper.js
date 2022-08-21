@@ -150,7 +150,7 @@ module.exports = NodeHelper.create({
       });
     } else if (source.startsWith("nasa:")) {
       const searchTerm = config.source.split(":")[1];
-      if (!searchTerm || searchTerm?.length === 0 || searchTerm === "") {
+      if (!searchTerm || searchTerm.length === 0 || searchTerm === "") {
         console.error("MMM-Wallpaper: Please specify search term for NASA API");
         return;
       }
@@ -591,10 +591,10 @@ module.exports = NodeHelper.create({
   processNasaData: function (config, data) {
     let images = [];
     for (const image of data.collection.items) {
-      if (image?.links && image?.links?.length > 0) {
+      if (image.links && image.links.length > 0) {
         images.push({
-          url: image?.links[0]?.href,
-          caption: image?.data[0]?.description?.substring(0, 250)
+          url: image.links[0].href,
+          caption: image.data[0].description.substring(0, 250)
         });
       }
     }
@@ -607,7 +607,7 @@ module.exports = NodeHelper.create({
     const key = (config.source === "apod") ? "url" : "hdurl";
 
     for (const image of data) {
-      if ((image?.media_type === "image") && (key in image)) {
+      if ((image.media_type === "image") && (key in image)) {
         images.unshift({
           url: image[key],
           caption: image.title,
