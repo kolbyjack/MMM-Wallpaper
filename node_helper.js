@@ -576,12 +576,14 @@ module.exports = NodeHelper.create({
     For NASA API usage without an API key, there are hourly limits of about 1,000 requests. 
     */
   processNasaData: function (config, data) {
+    // filter for images, since the API also returns videos
+    const filteredImages = data?.collection?.items.filter((item) => item?.data?.[0]['media_type'] === 'image');
     let images = [];
-    for (const image of data.collection.items) {
+    for (const image of filteredImages) {
       if (image?.links && image?.links?.length > 0) {
         images.push({
-          url: image?.links[0]?.href,
-          caption: image?.data[0]?.description?.substring(0, 250)
+          url: image?.links?.[0]?.href,
+          caption: image?.data?.[0]?.description_508 ? image?.data?.[0]?.description_508 : image?.data?.[0]?.title
         });
       }
     }
