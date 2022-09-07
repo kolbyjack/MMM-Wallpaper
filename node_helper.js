@@ -1,13 +1,13 @@
 "use strict";
 
 const NodeHelper = require("node_helper");
-const request = require("request");
 const fs = require("fs");
 const express = require("express");
 const crypto = require("crypto");
 const http = require("http");
 const https = require("https");
 const Flickr = require("flickr-sdk");
+const fetch = require("fetch");
 
 function shuffle(a) {
   var source = a.slice(0);
@@ -217,18 +217,12 @@ module.exports = NodeHelper.create({
       params.headers["cache-control"] = "no-cache";
     }
 
-    request(params,
-      function(error, response, body) {
-        if (error) {
-          self.sendSocketNotification("FETCH_ERROR", { error: error });
-          return console.error(` ERROR - MMM-Wallpaper: ${error}`);
-        }
-
-        if (response.statusCode < 400 && body.length > 0) {
+    fetch(params.url, params)
+      .then((response) => {
+        response.text().then((body) => {
           self.processResponse(response, body, config);
-        }
-      }
-    );
+        });
+      });
   },
 
   cacheResult: function(config, images) {
