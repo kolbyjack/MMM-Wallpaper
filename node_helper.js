@@ -70,14 +70,14 @@ module.exports = NodeHelper.create({
 
   fetchWallpapers: function(config) {
     var self = this;
-    var result = self.getCacheEntry(config);
 
-    if (config.maximumEntries <= result.images.length && Date.now() < result.expires) {
+    config.source = pick(config.source);
+    const cacheEntry = self.getCacheEntry(config);
+    if (config.maximumEntries <= cacheEntry.images.length && Date.now() < cacheEntry.expires) {
       self.sendResult(config);
       return;
     }
 
-    config.source = pick(config.source);
     var source = config.source.toLowerCase();
     if (source === "firetv") {
       if (self.firetv === null) {
