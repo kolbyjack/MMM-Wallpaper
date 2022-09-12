@@ -347,14 +347,14 @@ module.exports = NodeHelper.create({
     var images = [];
 
     if (self.iCloudState === "webstream") {
-      if (response.statusCode === 330) {
+      if (response.status === 330) {
         self.iCloudHost = body["X-Apple-MMe-Host"] || self.iCloudHost;
         self.request(config, {
           method: "POST",
           url: `https://${self.iCloudHost}/${album}/sharedstreams/webstream`,
           body: '{"streamCtag":null}'
         });
-      } else if (response.statusCode === 200) {
+      } else if (response.status === 200) {
         if (config.shuffle) {
           body.photos = shuffle(body.photos);
         }
@@ -491,7 +491,7 @@ module.exports = NodeHelper.create({
 
         const module = (url.protocol === "http:") ? http : https;
         const preq = module.request(options, (pres) => {
-          ores.writeHead(pres.statusCode, pres.headers);
+          ores.writeHead(pres.status, pres.headers);
           pres.on("data", (chunk) => { ores.write(chunk); });
           pres.on("close", () => { ores.end(); });
           pres.on("end", () => { ores.end(); });
@@ -511,8 +511,8 @@ module.exports = NodeHelper.create({
       self.expressApp.use(`/${self.name}/images/${cache_entry.key}/`, handler);
     }
 
-    if (response.statusCode !== 200) {
-      console.error(`ERROR: ${response.statusCode} -- ${body}`);
+    if (response.status !== 200) {
+      console.error(`ERROR: ${response.status} -- ${body}`);
     } else if (self.synologyMomentsState === "create_session") {
       if ("set-cookie" in response.headers) {
         cache_entry.session_cookie = response.headers["set-cookie"][0].split(";")[0];
