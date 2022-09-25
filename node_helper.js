@@ -491,7 +491,7 @@ module.exports = NodeHelper.create({
 
         const module = (url.protocol === "http:") ? http : https;
         const preq = module.request(options, (pres) => {
-          ores.writeHead(pres.status, pres.headers);
+          ores.writeHead(pres.statusCode, pres.headers);
           pres.on("data", (chunk) => { ores.write(chunk); });
           pres.on("close", () => { ores.end(); });
           pres.on("end", () => { ores.end(); });
