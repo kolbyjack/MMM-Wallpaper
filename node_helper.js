@@ -192,6 +192,7 @@ module.exports = NodeHelper.create({
         if (dirent[0] !== '.' && dirent.toLowerCase().match(/\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/) !== null) {
           images.push({
             url: `${urlPath}${dirent}`,
+            caption: dirent,
           });
         }
       }
