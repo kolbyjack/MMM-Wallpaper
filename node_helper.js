@@ -96,7 +96,10 @@ module.exports = NodeHelper.create({
       if (config.addCacheBuster) {
         url = `${url}${(url.indexOf("?") != -1) ? "&" : "?"}mmm-wallpaper-ts=${Date.now()}`;
       }
-      self.cacheResult(config, [{"url": url}]);
+      self.cacheResult(config, [{
+        url: url,
+        caption: config.source,
+      }]);
     } else if (source.startsWith("/r/")) {
       self.request(config, {
         url: `https://www.reddit.com${config.source}/hot.json`,
