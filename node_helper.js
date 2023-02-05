@@ -1,7 +1,6 @@
 "use strict";
 
 const NodeHelper = require("node_helper");
-const request = require("request");
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
@@ -9,6 +8,7 @@ const crypto = require("crypto");
 const http = require("http");
 const https = require("https");
 const Flickr = require("flickr-sdk");
+const fetch = require("fetch");
 
 function shuffle(a) {
   var source = a.slice(0);
@@ -35,6 +35,10 @@ function pick(a) {
   } else {
     return a;
   }
+}
+
+function z(n) {
+  return ((0 <= n && n < 10) ? "0" : "") + n;
 }
 
 function b62decode(s) {
@@ -67,14 +71,14 @@ module.exports = NodeHelper.create({
 
   fetchWallpapers: function(config) {
     var self = this;
-    var result = self.getCacheEntry(config);
 
-    if (config.maximumEntries <= result.images.length && Date.now() < result.expires) {
+    config.source = pick(config.source);
+    const cacheEntry = self.getCacheEntry(config);
+    if (config.maximumEntries <= cacheEntry.images.length && Date.now() < cacheEntry.expires) {
       self.sendResult(config);
       return;
     }
 
-    config.source = pick(config.source);
     var source = config.source.toLowerCase();
     if (source === "firetv") {
       if (self.firetv === null) {
@@ -93,7 +97,10 @@ module.exports = NodeHelper.create({
       if (config.addCacheBuster) {
         url = `${url}${(url.indexOf("?") != -1) ? "&" : "?"}mmm-wallpaper-ts=${Date.now()}`;
       }
-      self.cacheResult(config, [{"url": url}]);
+      self.cacheResult(config, [{
+        url: url,
+        caption: config.source,
+      }]);
     } else if (source.startsWith("/r/")) {
       self.request(config, {
         url: `https://www.reddit.com${config.source}/hot.json`,
@@ -145,6 +152,22 @@ module.exports = NodeHelper.create({
       self.request(config, {
         url: `https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&departmentId=${args[0]}&isHighlight=${args[1]}&q=${args[2]}`,
       });
+    } else if (source.startsWith("nasa:")) {
+      const searchTerm = config.source.split(":")[1];
+      if (!searchTerm || searchTerm.length === 0 || searchTerm === "") {
+        console.error("MMM-Wallpaper: Please specify search term for NASA API");
+        return;
+      }
+      self.request(config, {
+        url: `https://images-api.nasa.gov/search?q=${searchTerm}`
+      });
+    } else if ((source === "apod") || (source === "apodhd")) {
+      let startDate = new Date();
+      startDate.setDate(startDate.getDate() - config.maximumEntries);
+      startDate = `${startDate.getFullYear()}-${z(startDate.getMonth() + 1)}-${z(startDate.getDate())}`;
+      self.request(config, {
+        url: `https://api.nasa.gov/planetary/apod?api_key=${config.nasaApiKey}&start_date=${startDate}`,
+      });
     } else {
       self.request(config, {
         url: `https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=${config.maximumEntries}`,
@@ -179,7 +202,7 @@ module.exports = NodeHelper.create({
       .then(files => {
         let images = files
           .filter(file => file.toLowerCase().match(fileMatcher) != null)
-          .map(file => { return { url: `${urlPath}${file}` }; });
+          .map(file => { return { url: `${urlPath}${file}`, caption: file, }; });
 
         if (config.shuffle) {
           images = shuffle(images);
@@ -200,18 +223,12 @@ module.exports = NodeHelper.create({
       params.headers["cache-control"] = "no-cache";
     }
 
-    request(params,
-      function(error, response, body) {
-        if (error) {
-          self.sendSocketNotification("FETCH_ERROR", { error: error });
-          return console.error(` ERROR - MMM-Wallpaper: ${error}`);
-        }
-
-        if (response.statusCode < 400 && body.length > 0) {
+    fetch(params.url, params)
+      .then((response) => {
+        response.text().then((body) => {
           self.processResponse(response, body, config);
-        }
-      }
-    );
+        });
+      });
   },
 
   cacheResult: function(config, images) {
@@ -252,6 +269,10 @@ module.exports = NodeHelper.create({
       images = self.processSynologyMomentsData(response, body, config);
     } else if (source.startsWith("metmuseum:")) {
       images = self.processMetMuseumData(config, JSON.parse(body));
+    } else if (source.startsWith("nasa:")) {
+      images = self.processNasaData(config, JSON.parse(body));
+    } else if ((source === "apod") || (source === "apodhd")) {
+      images = self.processApodData(config, JSON.parse(body));
     } else {
       images = self.processBingData(config, JSON.parse(body));
     }
@@ -332,14 +353,14 @@ module.exports = NodeHelper.create({
     var images = [];
 
     if (self.iCloudState === "webstream") {
-      if (response.statusCode === 330) {
+      if (response.status === 330) {
         self.iCloudHost = body["X-Apple-MMe-Host"] || self.iCloudHost;
         self.request(config, {
           method: "POST",
           url: `https://${self.iCloudHost}/${album}/sharedstreams/webstream`,
           body: '{"streamCtag":null}'
         });
-      } else if (response.statusCode === 200) {
+      } else if (response.status === 200) {
         if (config.shuffle) {
           body.photos = shuffle(body.photos);
         }
@@ -496,8 +517,8 @@ module.exports = NodeHelper.create({
       self.expressApp.use(`/${self.name}/images/${cache_entry.key}/`, handler);
     }
 
-    if (response.statusCode !== 200) {
-      console.error(`ERROR: ${response.statusCode} -- ${body}`);
+    if (response.status !== 200) {
+      console.error(`ERROR: ${response.status} -- ${body}`);
     } else if (self.synologyMomentsState === "create_session") {
       if ("set-cookie" in response.headers) {
         cache_entry.session_cookie = response.headers["set-cookie"][0].split(";")[0];
@@ -560,6 +581,46 @@ module.exports = NodeHelper.create({
     }
 
     return [];
+  },
+
+  /* NASA APIs documented under https://api.nasa.gov/.
+    This accesses the NASA Image and Video Library. 
+    Currently, it only loads the thumbnails, which in most cases have good enough quality.
+    For NASA API usage without an API key, there are hourly limits of about 1,000 requests. 
+    */
+  processNasaData: function (config, data) {
+    if (!data.collection.items) {
+      return [];
+    }
+    // filter for images, since the API also returns videos
+    const filteredImages = data.collection.items.filter((item) => item.data[0]['media_type'] === 'image');
+    let images = [];
+    for (const image of filteredImages) {
+      if (image.links && image.links.length > 0) {
+        images.push({
+          url: image.links[0].href,
+          caption: image.data[0].description_508 ? image.data[0].description_508 : image.data[0].title
+        });
+      }
+    }
+
+    return images;
+  },
+
+  processApodData: function (config, data) {
+    const images = [];
+    const key = (config.source === "apod") ? "url" : "hdurl";
+
+    for (const image of data) {
+      if ((image.media_type === "image") && (key in image)) {
+        images.unshift({
+          url: image[key],
+          caption: image.title,
+        });
+      }
+    }
+
+    return images;
   },
 
   fetchFlickrApi: function(config) {

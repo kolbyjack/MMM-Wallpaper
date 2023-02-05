@@ -66,6 +66,8 @@ The following properties can be configured:
 
 |Source|Description|
 |---|---|
+|`"apod"`|Cycles through the most recent daily wallpapers from NASA's Astronomy Picture of the Day (standard resolution).|
+|`"apodhd"`|Cycles through the most recent daily wallpapers from NASA's Astronomy Picture of the Day (high resolution).|
 |`"bing"`|Cycles through the most recent daily wallpapers from Bing.|
 |`"chromecast"`|Cycles through random selections of the Chromecast wallpapers (thanks TheLukaBoss).|
 |`"firetv"`|Cycles through random selections of the FireTV wallpapers.|
@@ -78,8 +80,15 @@ The following properties can be configured:
 |`"/r/<subreddit>"`|Cycles through the most recent `hot` image posts from the subreddit.|
 |`"/user/<username>/m/<subreddit>"`|Cycles through the most recent `hot` image posts from the specified multireddit.|
 |`"metmuseum:<departmentID>,<isHightlight>,<q>"`|Cycle through collections in the Metropolitan Museum of Art. [departmentID](https://collectionapi.metmuseum.org/public/collection/v1/departments) is a number specifying collection type, e.g., Asian art, paintings etc. Multiple departmentID can be combined as `"departmentID1\|departmentID2"`. `<isHightlight>` is a `boolean` to show only highlighted artwork if set to `true`. `<q>` is keyword, e.g. artist name, culture, etc. All fields can be set to the wildcard `*`. For example, `"metmuseum:11,true,*"` would display highlighted European paintings.|
+|`"nasa:<search term>"`|Cycles through images specified in `search term` of NASA's Image and Video Library (https://api.nasa.gov/).|
 
 Source-specific configuration items:
+
+apod / apodhd:
+
+|Option|Default|Description|
+|---|---|---|
+|`"nasaApiKey"`|`none`|Sign up for an [api key](https://api.nasa.gov/) and enter it here. (Required)|
 
 flickr-api:
 
