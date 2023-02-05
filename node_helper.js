@@ -178,32 +178,38 @@ module.exports = NodeHelper.create({
   readdir: function(config) {
     const self = this;
     const result = self.getCacheEntry(config);
-    const path = config.source.substring(6).trim();
+    const sourcePath = config.source.substring(6).trim();
     const urlPath = `/${self.name}/images/${result.key}/`;
     const fileMatcher = /\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/;
 
     if (!(result.key in self.handlers)) {
-      var handler = express.static(path);
+      var handler = express.static(sourcePath);
 
       self.handlers[result.key] = handler;
       self.expressApp.use(urlPath, handler);
     }
 
-    async function getFiles(dir) {
+    async function getFiles(dir, prefix) {
       const dirents = await fs.promises.readdir(dir, { withFileTypes: true });
-      const files = await Promise.all(dirents.map((dirent) => {
-        const res = path.resolve(dir, dirent.name);
-        return dirent.isDirectory() ? getFiles(res) : res;
-      }));
-      return Array.prototype.concat(...files);
-    }
+      let result = [];
 
-    getFiles(path)
-      .then(files => {
-        let images = files
-          .filter(file => file.toLowerCase().match(fileMatcher) != null)
-          .map(file => { return { url: `${urlPath}${file}`, caption: file, }; });
+      for (const dirent of dirents) {
+        const entpath = path.resolve(dir, dirent.name);
+        if (dirent.isDirectory()) {
+          result = result.concat(await getFiles(entpath, `${prefix}${dirent.name}/`));
+        } else if (dirent.name.toLowerCase().match(fileMatcher) != null) {
+          result.push({
+            url: `${urlPath}${prefix.substring(1)}${dirent.name}`,
+            caption: entpath,
+          });
+        }
+      }
 
+      return result;
+    };
+
+    getFiles(sourcePath, "/")
+      .then(images => {
         if (config.shuffle) {
           images = shuffle(images);
         }
