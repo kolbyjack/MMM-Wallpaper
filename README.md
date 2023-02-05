@@ -110,7 +110,13 @@ http:// or https:// url:
 
 |Option|Default|Description|
 |---|---|---|
-|`"addCacheBuster"`|true|Whether to add a cache-busting argument to the query string (`mmm-wallpaper-ts`).|
+|`"addCacheBuster"`|`true`|Whether to add a cache-busting argument to the query string (`mmm-wallpaper-ts`).|
+
+local:
+
+|Option|Default|Description|
+|---|---|---|
+|`"recurseLocalDirectories"`|`false`|Whether to recurse into subdirectories when looking for images.|
 
 ## Notifications
 

@@ -195,9 +195,9 @@ module.exports = NodeHelper.create({
 
       for (const dirent of dirents) {
         const entpath = path.resolve(dir, dirent.name);
-        if (dirent.isDirectory()) {
+        if (dirent.isDirectory() && config.recurseLocalDirectories) {
           result = result.concat(await getFiles(entpath, `${prefix}${dirent.name}/`));
-        } else if (dirent.name.toLowerCase().match(fileMatcher) != null) {
+        } else if (dirent.isFile() && dirent.name.toLowerCase().match(fileMatcher) != null) {
           result.push({
             url: `${urlPath}${prefix.substring(1)}${dirent.name}`,
             caption: entpath,
