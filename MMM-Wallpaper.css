@@ -19,6 +19,7 @@
 }
 
 .MMM-Wallpaper .crossfade-image {
+  position: absolute;
   transition: opacity 1s ease-in-out;
 }
 
