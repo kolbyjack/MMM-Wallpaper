@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/kolbyjack/MMM-Wallpaper#readme",
   "dependencies": {
-    "flickr-sdk": "4.0.0"
+    "flickr-sdk": "6.1.2"
   }
 }
