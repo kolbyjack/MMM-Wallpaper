@@ -150,7 +150,7 @@ module.exports = NodeHelper.create({
     } else if (source.startsWith("metmuseum:")) {
       var args = config.source.substring(10).split(",");
       self.request(config, {
-        url: `https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&departmentId=${args[0]}&isHighlight=${args[1]}&q=${args[2]}`,
+        url: `https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&departmentIds=${args[0]}&isHighlight=${args[1]}&q=${args[2]}`,
       });
     } else if (source.startsWith("nasa:")) {
       const searchTerm = config.source.split(":")[1];
