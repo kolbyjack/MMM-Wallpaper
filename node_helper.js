@@ -582,7 +582,7 @@ module.exports = NodeHelper.create({
 
           if (obj.isPublicDomain) {
             const image = {
-              url: obj.primaryImageSmall,
+              url: obj.primaryImage,
               caption: `${obj.title} - ${obj.artistDisplayName}`,
             };
 
@@ -605,7 +605,7 @@ module.exports = NodeHelper.create({
       req.end();
     }
 
-    return [];
+    return images;
   },
 
   /* NASA APIs documented under https://api.nasa.gov/.
