@@ -149,9 +149,13 @@ module.exports = NodeHelper.create({
       });
     } else if (source.startsWith("metmuseum:")) {
       var args = config.source.substring(10).split(",");
-      self.request(config, {
-        url: `https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&departmentIds=${args[0]}&isHighlight=${args[1]}&q=${args[2]}`,
-      });
+      var departments = args[0].split('|');
+      for (var i = 0; i < departments.length; i++) {
+        var departmentId = departments[i];
+        self.request(config, {
+          url: `https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&departmentId=${departmentId}&isHighlight=${args[1]}&q=${args[2]}`,
+        });
+      }
     } else if (source.startsWith("nasa:")) {
       const searchTerm = config.source.split(":")[1];
       if (!searchTerm || searchTerm.length === 0 || searchTerm === "") {
