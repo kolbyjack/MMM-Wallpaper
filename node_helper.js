@@ -570,20 +570,21 @@ module.exports = NodeHelper.create({
     for (var id of objectIDs) {
       var url = `https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`;
 
-      request(url, function (error, response, body) {
-        var obj = JSON.parse(body);
-
-        if (obj.isPublicDomain) {
-          images.push({
-            url: obj.primaryImageSmall,
-            caption: `${obj.title} - ${obj.artistDisplayName}`,
-          });
-        }
-
-        if (--pendingRequests === 0) {
-          self.cacheResult(config, images);
-        }
-      });
+      fetch(url)
+        .then(response => response.json())
+        .then(obj => {
+          if (obj.isPublicDomain) {
+            images.push({
+              url: obj.primaryImageSmall,
+              caption: `${obj.title} - ${obj.artistDisplayName}`,
+            });
+          }
+        })
+        .finally(() => {
+          if (--pendingRequests === 0) {
+            self.cacheResult(config, images);
+          }
+        });
     }
 
     return [];
