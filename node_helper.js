@@ -8,7 +8,9 @@ const crypto = require("crypto");
 const http = require("http");
 const https = require("https");
 const Flickr = require("flickr-sdk");
-const fetch = require("fetch");
+if (typeof(fetch) === "undefined") {
+  fetch = require("fetch");
+}
 
 function shuffle(a) {
   var source = a.slice(0);
