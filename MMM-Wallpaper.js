@@ -23,6 +23,8 @@ Module.register("MMM-Wallpaper", {
     height: "auto",
     flickrApiKey: "",
     fadeEdges: false,
+    recurseLocalDirectories: false,
+    blacklist: []
   },
 
   getStyles: function() {
