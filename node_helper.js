@@ -762,14 +762,19 @@ module.exports = NodeHelper.create({
         }
 
         if (--pendingRequests === 0) {
-          self.cacheResult(config, images);
+          self.handleCompletedFlickrPhotos(config, images);
         }
       }).catch(err => {
         if (--pendingRequests === 0) {
-          self.cacheResult(config, images);
+          self.handleCompletedFlickrPhotos(config, images);
         }
       });
     }
+  },
+
+  handleCompletedFlickrPhotos: function (config, images) {
+    var self = this;
+    self.cacheResult(config, images);
   },
 
   getCacheEntry: function(config) {
