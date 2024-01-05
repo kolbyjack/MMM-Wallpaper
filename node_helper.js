@@ -642,6 +642,11 @@ module.exports = NodeHelper.create({
       self.flickrFeeds = new Flickr.Feeds();
     }
 
+    self.fetchOneFlickrSource(config, args);
+  },
+
+  fetchOneFlickrSource: function(config, args) {
+    const self = this;
     if (args[0] === "publicPhotos") {
       self.flickrFeeds.publicPhotos().then(res => {
         self.processFlickrFeedPhotos(config, res.body.items);
