@@ -642,28 +642,29 @@ module.exports = NodeHelper.create({
       self.flickrFeeds = new Flickr.Feeds();
     }
 
-    self.fetchOneFlickrSource(config, args);
+    const promise = new Promise((resolve, reject) => self.fetchOneFlickrSource(config, args, resolve));
+    Promise.all([promise]).then((results) => { self.cacheResult(config, results[0]); });
   },
 
-  fetchOneFlickrSource: function(config, args) {
+  fetchOneFlickrSource: function(config, args, resolve) {
     const self = this;
     if (args[0] === "publicPhotos") {
       self.flickrFeeds.publicPhotos().then(res => {
-        self.processFlickrFeedPhotos(config, res.body.items);
+        self.processFlickrFeedPhotos(config, res.body.items, resolve);
       });
     } else if (args[0] === "tags" && args.length > 1) {
       self.flickrFeeds.publicPhotos({
         tags: args[1],
         tagmode: (args.length > 2) ? args[2] : "all",
       }).then(res => {
-        self.processFlickrFeedPhotos(config, res.body.items);
+        self.processFlickrFeedPhotos(config, res.body.items, resolve);
       });
     } else if (args[0] === "photos" && args.length > 1) {
       if (args.length === 4 && args[2] === "galleries") {
         self.fetchFlickrApiPhotos(config, "galleries", "photos", {
           gallery_id: args[3],
           extras: "owner_name",
-        });
+        }, resolve);
       } else {
         self.flickr.people.findByUsername({
           username: args[1],
@@ -672,19 +673,19 @@ module.exports = NodeHelper.create({
             self.fetchFlickrApiPhotos(config, "people", "photos", {
               user_id: res.body.user.id,
               extras: "owner_name",
-            });
+            }, resolve);
           } else if (args.length === 3 && args[2] === "favorites") {
             self.fetchFlickrApiPhotos(config, "favorites", "photos", {
               user_id: res.body.user.id,
               extras: "owner_name",
-            });
+            }, resolve);
           } else if (args.length === 4) {
             if (args[2] === "albums") {
               self.fetchFlickrApiPhotos(config, "photosets", "photoset", {
                 user_id: res.body.user.id,
                 photoset_id: args[3],
                 extras: "owner_name",
-              });
+              }, resolve);
             }
           }
         });
@@ -696,12 +697,12 @@ module.exports = NodeHelper.create({
         self.fetchFlickrApiPhotos(config, "groups.pools", "photos", {
           group_id: res.body.group.id,
           extras: "owner_name",
-        });
+        }, resolve);
       });
     }
   },
 
-  fetchFlickrApiPhotos: function(config, sourceType, resultType, args) {
+  fetchFlickrApiPhotos: function(config, sourceType, resultType, args, resolve) {
     const self = this;
     let source = self.flickr;
 
@@ -717,11 +718,11 @@ module.exports = NodeHelper.create({
           title: p.title,
           owner: p.ownername,
         }
-      }));
+      }), resolve);
     });
   },
 
-  processFlickrFeedPhotos: function(config, items) {
+  processFlickrFeedPhotos: function(config, items, resolve) {
     const self = this;
 
     self.processFlickrPhotos(config, items.map(i => {
@@ -730,10 +731,10 @@ module.exports = NodeHelper.create({
         title: i.title,
         owner: i.author.split('"').filter(s => s.length > 0).slice(-2)[0],
       }
-    }));
+    }), resolve);
   },
 
-  processFlickrPhotos: function(config, photos) {
+  processFlickrPhotos: function(config, photos, resolve) {
     const self = this;
     const images = [];
 
@@ -767,19 +768,14 @@ module.exports = NodeHelper.create({
         }
 
         if (--pendingRequests === 0) {
-          self.handleCompletedFlickrPhotos(config, images);
+          resolve(images);
         }
       }).catch(err => {
         if (--pendingRequests === 0) {
-          self.handleCompletedFlickrPhotos(config, images);
+          resolve(images);
         }
       });
     }
-  },
-
-  handleCompletedFlickrPhotos: function (config, images) {
-    var self = this;
-    self.cacheResult(config, images);
   },
 
   getCacheEntry: function(config) {
