@@ -634,7 +634,7 @@ module.exports = NodeHelper.create({
 
   fetchFlickrApi: function(config) {
     const self = this;
-    const args = config.source.substring(11).split('/').filter(s => s.length > 0);
+    const sources = config.source.substring(11).split(';');
 
     if (!self.flickr) {
       self.flickr = new Flickr(config.flickrApiKey);
@@ -642,8 +642,18 @@ module.exports = NodeHelper.create({
       self.flickrFeeds = new Flickr.Feeds();
     }
 
-    const promise = new Promise((resolve, reject) => self.fetchOneFlickrSource(config, args, resolve));
-    Promise.all([promise]).then((results) => { self.cacheResult(config, results[0]); });
+    const promises = [];
+    for (const source of sources) {
+      const args = source.split('/').filter(s => s.length > 0);
+      promises.push(new Promise((resolve, reject) => self.fetchOneFlickrSource(config, args, resolve)));
+    }
+    Promise.all(promises).then((results) => {
+      const images = [];
+      for (const result of results) {
+        images.push(...result);
+      }
+      self.cacheResult(config, images);
+    });
   },
 
   fetchOneFlickrSource: function(config, args, resolve) {
