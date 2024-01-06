@@ -8,7 +8,8 @@ const crypto = require("crypto");
 const http = require("http");
 const https = require("https");
 const Flickr = require("flickr-sdk");
-if (typeof(fetch) === "undefined") {
+const NodeCache = require("node-cache");
+if (typeof (fetch) === "undefined") {
   fetch = require("fetch");
 }
 
@@ -641,6 +642,9 @@ module.exports = NodeHelper.create({
       self.flickr.favorites.getPhotos = self.flickr.favorites.getList;
       self.flickrFeeds = new Flickr.Feeds();
     }
+    if (!self.flickrDataCache) {
+      self.flickrDataCache = new NodeCache();
+    }
 
     const promises = [];
     for (const source of sources) {
@@ -761,6 +765,15 @@ module.exports = NodeHelper.create({
     let pendingRequests = photos.length;
 
     for (let p of photos) {
+      const cacheResult = self.flickrDataCache.get(p.id);
+      if (cacheResult !== undefined) {
+        images.push(cacheResult);
+        if (--pendingRequests === 0) {
+          resolve(images);
+        }
+        continue;
+      }
+
       self.flickr.photos.getSizes({
         photo_id: p.id,
       }).then(res => {
@@ -783,6 +796,7 @@ module.exports = NodeHelper.create({
         if (result.variants.length > 0) {
           result.variants.sort((a, b) => { return a.width * a.height - b.width * b.height; });
           result.url = result.variants[result.variants.length - 1].url;
+          self.flickrDataCache.set(p.id, result, config.flickrDataCacheTime);
           images.push(result);
         }
 
