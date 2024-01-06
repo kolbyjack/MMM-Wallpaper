@@ -644,8 +644,7 @@ module.exports = NodeHelper.create({
 
     const promises = [];
     for (const source of sources) {
-      const args = source.split('/').filter(s => s.length > 0);
-      promises.push(new Promise((resolve, reject) => self.fetchOneFlickrSource(config, args, resolve)));
+      promises.push(new Promise((resolve, reject) => self.fetchOneFlickrSource(config, source, resolve)));
     }
     Promise.all(promises).then((results) => {
       let images = [];
@@ -663,8 +662,9 @@ module.exports = NodeHelper.create({
     }).then((images) => self.cacheResult(config, images));
   },
 
-  fetchOneFlickrSource: function(config, args, resolve) {
+  fetchOneFlickrSource: function(config, source, resolve) {
     const self = this;
+    const args = source.split('/').filter(s => s.length > 0);
     if (args[0] === "publicPhotos") {
       self.flickrFeeds.publicPhotos().then(res => {
         self.processFlickrFeedPhotos(config, res.body.items, resolve);
@@ -716,6 +716,9 @@ module.exports = NodeHelper.create({
           extras: "owner_name",
         }, resolve);
       });
+    } else {
+      console.warn(`Unrecognised Flickr source ${source}, ignoring`);
+      resolve([]);
     }
   },
 
