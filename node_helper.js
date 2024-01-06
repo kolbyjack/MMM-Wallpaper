@@ -657,7 +657,7 @@ module.exports = NodeHelper.create({
       if (config.shuffle) {
         images = shuffle(images);
       }
-      return images.slice(0, config.maximumEntries);
+      return images; // processFlickrPhotos truncates the array to maximumEntries
     }).then((images) => {
       return new Promise((resolve, reject) => self.processFlickrPhotos(config, images, resolve));
     }).then((images) => self.cacheResult(config, images));
@@ -754,7 +754,7 @@ module.exports = NodeHelper.create({
     const self = this;
     const images = [];
 
-    photos = photos.slice(0, Math.max(60, config.maximumEntries));
+    photos = photos.slice(0, config.maximumEntries);
     let pendingRequests = photos.length;
 
     for (let p of photos) {
