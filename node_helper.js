@@ -658,6 +658,8 @@ module.exports = NodeHelper.create({
         images = shuffle(images);
       }
       return images.slice(0, config.maximumEntries);
+    }).then((images) => {
+      return new Promise((resolve, reject) => self.processFlickrPhotos(config, images, resolve));
     }).then((images) => self.cacheResult(config, images));
   },
 
@@ -727,26 +729,25 @@ module.exports = NodeHelper.create({
 
     args.per_page = args.per_page || config.maximumEntries;
     source.getPhotos(args).then(res => {
-      self.processFlickrPhotos(config, res.body[resultType].photo.map(p => {
+      resolve(res.body[resultType].photo.map(p => {
         return {
           id: p.id,
           title: p.title,
           owner: p.ownername,
         }
-      }), resolve);
+      }));
     });
   },
 
   processFlickrFeedPhotos: function(config, items, resolve) {
     const self = this;
-
-    self.processFlickrPhotos(config, items.map(i => {
+    resolve(items.map(i => {
       return {
         id: i.link.split("/").filter(s => s.length > 0).slice(-1)[0],
         title: i.title,
         owner: i.author.split('"').filter(s => s.length > 0).slice(-2)[0],
       }
-    }), resolve);
+    }));
   },
 
   processFlickrPhotos: function(config, photos, resolve) {
