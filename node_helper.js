@@ -634,7 +634,7 @@ module.exports = NodeHelper.create({
 
   fetchFlickrApi: function(config) {
     const self = this;
-    const args = config.source.substring(11).split('/').filter(s => s.length > 0);
+    const sources = config.source.substring(11).split(';');
 
     if (!self.flickr) {
       self.flickr = new Flickr(config.flickrApiKey);
@@ -642,23 +642,46 @@ module.exports = NodeHelper.create({
       self.flickrFeeds = new Flickr.Feeds();
     }
 
+    const promises = [];
+    for (const source of sources) {
+      promises.push(new Promise((resolve, reject) => self.fetchOneFlickrSource(config, source, resolve)));
+    }
+    Promise.all(promises).then((results) => {
+      let images = [];
+      for (const result of results) {
+        images.push(...result);
+      }
+      // Each source fetches up to maximumImages images (in case some have fewer).
+      // Apply shuffle now, as the consumer will truncate.
+      if (config.shuffle) {
+        images = shuffle(images);
+      }
+      return images; // processFlickrPhotos truncates the array to maximumEntries
+    }).then((images) => {
+      return new Promise((resolve, reject) => self.processFlickrPhotos(config, images, resolve));
+    }).then((images) => self.cacheResult(config, images));
+  },
+
+  fetchOneFlickrSource: function(config, source, resolve) {
+    const self = this;
+    const args = source.split('/').filter(s => s.length > 0);
     if (args[0] === "publicPhotos") {
       self.flickrFeeds.publicPhotos().then(res => {
-        self.processFlickrFeedPhotos(config, res.body.items);
+        self.processFlickrFeedPhotos(config, res.body.items, resolve);
       });
     } else if (args[0] === "tags" && args.length > 1) {
       self.flickrFeeds.publicPhotos({
         tags: args[1],
         tagmode: (args.length > 2) ? args[2] : "all",
       }).then(res => {
-        self.processFlickrFeedPhotos(config, res.body.items);
+        self.processFlickrFeedPhotos(config, res.body.items, resolve);
       });
     } else if (args[0] === "photos" && args.length > 1) {
       if (args.length === 4 && args[2] === "galleries") {
         self.fetchFlickrApiPhotos(config, "galleries", "photos", {
           gallery_id: args[3],
           extras: "owner_name",
-        });
+        }, resolve);
       } else {
         self.flickr.people.findByUsername({
           username: args[1],
@@ -667,19 +690,19 @@ module.exports = NodeHelper.create({
             self.fetchFlickrApiPhotos(config, "people", "photos", {
               user_id: res.body.user.id,
               extras: "owner_name",
-            });
+            }, resolve);
           } else if (args.length === 3 && args[2] === "favorites") {
             self.fetchFlickrApiPhotos(config, "favorites", "photos", {
               user_id: res.body.user.id,
               extras: "owner_name",
-            });
+            }, resolve);
           } else if (args.length === 4) {
             if (args[2] === "albums") {
               self.fetchFlickrApiPhotos(config, "photosets", "photoset", {
                 user_id: res.body.user.id,
                 photoset_id: args[3],
                 extras: "owner_name",
-              });
+              }, resolve);
             }
           }
         });
@@ -691,12 +714,15 @@ module.exports = NodeHelper.create({
         self.fetchFlickrApiPhotos(config, "groups.pools", "photos", {
           group_id: res.body.group.id,
           extras: "owner_name",
-        });
+        }, resolve);
       });
+    } else {
+      console.warn(`Unrecognised Flickr source ${source}, ignoring`);
+      resolve([]);
     }
   },
 
-  fetchFlickrApiPhotos: function(config, sourceType, resultType, args) {
+  fetchFlickrApiPhotos: function(config, sourceType, resultType, args, resolve) {
     const self = this;
     let source = self.flickr;
 
@@ -706,7 +732,7 @@ module.exports = NodeHelper.create({
 
     args.per_page = args.per_page || config.maximumEntries;
     source.getPhotos(args).then(res => {
-      self.processFlickrPhotos(config, res.body[resultType].photo.map(p => {
+      resolve(res.body[resultType].photo.map(p => {
         return {
           id: p.id,
           title: p.title,
@@ -716,10 +742,9 @@ module.exports = NodeHelper.create({
     });
   },
 
-  processFlickrFeedPhotos: function(config, items) {
+  processFlickrFeedPhotos: function(config, items, resolve) {
     const self = this;
-
-    self.processFlickrPhotos(config, items.map(i => {
+    resolve(items.map(i => {
       return {
         id: i.link.split("/").filter(s => s.length > 0).slice(-1)[0],
         title: i.title,
@@ -728,11 +753,11 @@ module.exports = NodeHelper.create({
     }));
   },
 
-  processFlickrPhotos: function(config, photos) {
+  processFlickrPhotos: function(config, photos, resolve) {
     const self = this;
     const images = [];
 
-    photos = photos.slice(0, Math.max(60, config.maximumEntries));
+    photos = photos.slice(0, config.maximumEntries);
     let pendingRequests = photos.length;
 
     for (let p of photos) {
@@ -762,11 +787,11 @@ module.exports = NodeHelper.create({
         }
 
         if (--pendingRequests === 0) {
-          self.cacheResult(config, images);
+          resolve(images);
         }
       }).catch(err => {
         if (--pendingRequests === 0) {
-          self.cacheResult(config, images);
+          resolve(images);
         }
       });
     }

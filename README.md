@@ -96,6 +96,15 @@ flickr-api:
 |---|---|---|
 |`"flickrApiKey"`|`none`|Sign up for an [api key](https://www.flickr.com/services/apps/create/noncommercial/) and enter it here. (Required)|
 
+*Notes:*
+* You can specify multiple Flickr sources separated by `;`. For example: `flickr-api:publicPhotos;photos/<user1>/favorites;photos/<user2>/favorites`
+  * If `shuffle` is `true`, up to `maximumEntries` will be listed from each source, then shuffled and no more than `maximumEntries` presented.
+  * If `shuffle` is `false`, up to `maximumEntries` photos will be presented from the sources in order.
+* Flickr limits usage by a single API key to 3600 queries per hour. If you set a very high `maximumEntries` you may run into this limit. This module makes the following Flickr API calls every `updateInterval`:
+  * At least 1 call to `getPublicPhotos` per configured source (each call returns up to 500 photos; if there are more, and you've set `maximumEntries` higher, there will be further calls)
+  * 1 call to `getSizes` per photo selected for display (at most `maximumEntries`)
+
+
 |Source|Description|
 |---|---|
 |`publicPhotos`|Loads unfiltered public content.|
