@@ -657,8 +657,8 @@ module.exports = NodeHelper.create({
       if (config.shuffle) {
         images = shuffle(images);
       }
-      self.cacheResult(config, images);
-    });
+      return images.slice(0, config.maximumEntries);
+    }).then((images) => self.cacheResult(config, images));
   },
 
   fetchOneFlickrSource: function(config, args, resolve) {
