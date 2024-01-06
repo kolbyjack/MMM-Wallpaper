@@ -648,9 +648,14 @@ module.exports = NodeHelper.create({
       promises.push(new Promise((resolve, reject) => self.fetchOneFlickrSource(config, args, resolve)));
     }
     Promise.all(promises).then((results) => {
-      const images = [];
+      let images = [];
       for (const result of results) {
         images.push(...result);
+      }
+      // Each source fetches up to maximumImages images (in case some have fewer).
+      // Apply shuffle now, as the consumer will truncate.
+      if (config.shuffle) {
+        images = shuffle(images);
       }
       self.cacheResult(config, images);
     });
