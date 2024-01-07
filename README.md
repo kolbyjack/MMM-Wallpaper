@@ -96,6 +96,7 @@ flickr-api:
 |---|---|---|
 |`"flickrApiKey"`|`none`|Sign up for an [api key](https://www.flickr.com/services/apps/create/noncommercial/) and enter it here. (Required)|
 |`"flickrDataCacheTime"`| `24*60*60*3600` (1 day) | How long to cache image metadata retrieved from Flickr. |
+|`"flickrResultsPerPage"`| `500` | How photo results per page to request from the Flickr API |
 
 *Notes:*
 * You can specify multiple Flickr sources separated by `;`. For example: `flickr-api:publicPhotos;photos/<user1>/favorites;photos/<user2>/favorites`

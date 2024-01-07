@@ -670,13 +670,16 @@ module.exports = NodeHelper.create({
     const self = this;
     const args = source.split('/').filter(s => s.length > 0);
     if (args[0] === "publicPhotos") {
-      self.flickrFeeds.publicPhotos().then(res => {
+      self.flickrFeeds.publicPhotos({
+        per_page: config.flickrResultsPerPage,
+      }).then(res => {
         self.processFlickrFeedPhotos(config, res.body.items, resolve);
       });
     } else if (args[0] === "tags" && args.length > 1) {
       self.flickrFeeds.publicPhotos({
         tags: args[1],
         tagmode: (args.length > 2) ? args[2] : "all",
+        per_page: config.flickrResultsPerPage,
       }).then(res => {
         self.processFlickrFeedPhotos(config, res.body.items, resolve);
       });
@@ -734,7 +737,7 @@ module.exports = NodeHelper.create({
       source = source[s];
     }
 
-    args.per_page = args.per_page || config.maximumEntries;
+    args.per_page = args.per_page || config.flickrResultsPerPage;
     source.getPhotos(args).then(res => {
       resolve(res.body[resultType].photo.map(p => {
         return {

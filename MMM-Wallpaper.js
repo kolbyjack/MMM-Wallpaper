@@ -23,6 +23,7 @@ Module.register("MMM-Wallpaper", {
     height: "auto",
     flickrApiKey: "",
     flickrDataCacheTime: 24 * 60 * 60 * 1000,
+    flickrResultsPerPage: 500, // Flickr API is limited to 500 photos per page
     fadeEdges: false,
   },
 
