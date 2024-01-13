@@ -797,10 +797,14 @@ module.exports = NodeHelper.create({
         }
 
         if (result.variants.length > 0) {
-          result.variants.sort((a, b) => { return a.width * a.height - b.width * b.height; });
-          result.url = result.variants[result.variants.length - 1].url;
-          self.flickrDataCache.set(p.id, result, config.flickrDataCacheTime);
-          images.push(result);
+          let selection = result.variants.reduce((prev, variant) => {
+            return ((variant.width <= config.maxWidth) && (variant.height <= config.maxHeight)) ? variant : prev;
+          }, undefined);
+          if (selection !== undefined) {
+            result.url = selection.url;
+            self.flickrDataCache.set(p.id, result, config.flickrDataCacheTime);
+            images.push(result);
+          }
         }
 
         if (--pendingRequests === 0) {
