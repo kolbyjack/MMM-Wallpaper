@@ -54,8 +54,8 @@ The following properties can be configured:
 |`filter`|`"grayscale(0.5) brightness(0.5)"`|The CSS filter to apply to the images, to improve readability of other modules' text|
 |`orientation`|`"auto"`|The image orientation to retrieve.  Choices are "vertical," "horizontal," and "auto."  Only used by the `pexels` and `bing` sources.|
 |`crossfade`|`true`|Whether to crossfade between images when loading a new wallpaper, or just replace the current image.|
-|`maxWidth`|`MAX_SAFE_INTEGER`|Maximum width of selected variant (only supported for reddit sources).|
-|`maxHeight`|`MAX_SAFE_INTEGER`|Maximum height of selected variant (only supported for reddit sources).|
+|`maxWidth`|`MAX_SAFE_INTEGER`|Maximum width of selected variant (only supported for reddit & flickr sources).|
+|`maxHeight`|`MAX_SAFE_INTEGER`|Maximum height of selected variant (only supported for reddit & flickr sources).|
 |`nsfw`|`true`|Whether to allow 18+ images to be chosen (only supported for reddit sources).|
 |`shuffle`|`true`|Whether to randomly select images from those sources that support it, or cycle through the latest.|
 |`size`|`cover`|Sizing policy for images.  Similar to CSS [background-size](https://www.w3schools.com/cssref/css3_pr_background-size.asp).  Choices are "cover," "contain," and "auto."|
@@ -96,7 +96,7 @@ flickr-api:
 |---|---|---|
 |`"flickrApiKey"`|`none`|Sign up for an [api key](https://www.flickr.com/services/apps/create/noncommercial/) and enter it here. (Required)|
 |`"flickrDataCacheTime"`| `24*60*60*3600` (1 day) | How long to cache image metadata retrieved from Flickr. |
-|`"flickrResultsPerPage"`| `500` | How photo results per page to request from the Flickr API |
+|`"flickrResultsPerPage"`| `500` | How many photo results per page to request from the Flickr API. |
 
 *Notes:*
 * You can specify multiple Flickr sources separated by `;`. For example: `flickr-api:publicPhotos;photos/<user1>/favorites;photos/<user2>/favorites`
@@ -105,7 +105,8 @@ flickr-api:
 * Flickr limits usage by a single API key to 3600 queries per hour. If you set a very high `maximumEntries` you may run into this limit. This module makes the following Flickr API calls every `updateInterval`:
   * At least 1 call to `getPublicPhotos` per configured source (each call returns up to 500 photos; if there are more, and you've set `maximumEntries` higher, there will be further calls)
   * 1 call to `getSizes` per photo selected for display (at most `maximumEntries`); the results are cached for `flickrDataCacheTime`.
-
+* Very large images can consume excessive memory on the client. To prevent this, tune `maxWidth` and `maxHeight` to suit your display setup.
+  * It is important to not set the limits too low! Photos with unusual aspect ratios can lead to a poor experience. We suggest about 1.5x your display resolution as a good starting point.
 
 |Source|Description|
 |---|---|
