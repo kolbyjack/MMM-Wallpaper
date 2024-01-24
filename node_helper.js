@@ -9,8 +9,8 @@ const http = require("http");
 const https = require("https");
 const Flickr = require("flickr-sdk");
 const NodeCache = require("node-cache");
-if (typeof (fetch) === "undefined") {
-  fetch = require("fetch");
+if (!fetch) {
+  const fetch = await import("fetch");
 }
 
 function shuffle(a) {
