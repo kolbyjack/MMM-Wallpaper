@@ -53,6 +53,15 @@ function b62decode(s) {
   return result;
 }
 
+function parsePWGCookies(response) {
+  // It seems three cookies are returned. Two pwg_id cookies of which we need
+  // the last one, and pwg_remember which is set to deleted. We don't need
+  // that. So we will just get the last pwg_id cookie.
+  const cookies = response.headers.get('set-cookie');
+  const cookiestart = cookies.substring(cookies.lastIndexOf('pwg_id'));
+  return cookiestart.split(';')[0];
+}
+
 module.exports = NodeHelper.create({
   start: function() {
     var self = this;
@@ -171,6 +180,17 @@ module.exports = NodeHelper.create({
       self.request(config, {
         url: `https://api.nasa.gov/planetary/apod?api_key=${config.nasaApiKey}&start_date=${startDate}`,
       });
+    } else if (source.startsWith("piwigo:")) {
+      self.piwigoState = "create_session";
+      self.request(config, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+          "cookie": '',
+        },
+        url: `${config.source.substring(7)}/ws.php?format=json`,
+        body: `method=pwg.session.login&username=${encodeURIComponent(config.piwigoUsername)}&password=${encodeURIComponent(config.piwigoPassword)}`
+      });
     } else {
       self.request(config, {
         url: `https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=${config.maximumEntries}`,
@@ -282,6 +302,8 @@ module.exports = NodeHelper.create({
       images = self.processNasaData(config, JSON.parse(body));
     } else if ((source === "apod") || (source === "apodhd")) {
       images = self.processApodData(config, JSON.parse(body));
+    } else if (source.startsWith("piwigo:")) {
+      images = self.processPiwigoData(config, body, response);
     } else {
       images = self.processBingData(config, JSON.parse(body));
     }
@@ -305,6 +327,61 @@ module.exports = NodeHelper.create({
       });
     }
 
+    return images;
+  },
+
+  processPiwigoData: function(config, body, response) {
+    var self = this;
+    var cache_entry = self.getCacheEntry(config);
+    var api_url = `${config.source.substring(7)}/ws.php?format=json`
+    var images = [];
+    var data;
+    var cookies;
+    var caption;
+    var space;
+
+    if (response.status !== 200) {
+      console.error(`ERROR: ${response.status} -- ${body}`);
+    } else if (self.piwigoState === "create_session") {
+      data = JSON.parse(body);
+      cookies = parsePWGCookies(response);
+      if (data.stat = "ok") {
+        cache_entry.session_cookie = cookies;
+        self.piwigoState = "browse_item";
+        self.request(config, {
+          url: `${api_url}&method=pwg.categories.getImages&cat_id=${config.piwigoCategory}&per_page=${config.maximumEntries}&order=random`,
+          headers: {
+            "accept": '*/*',
+            "cookie": cookies
+          },
+          "method": 'GET',
+        });
+      } else {
+        console.log("Looks like piwigo login failed.");
+      }
+    } else {
+      data = JSON.parse(body)
+      for (var image of data.result.images) {
+        caption = "";
+        space="";
+        if ( image.name && !(image.name === image.file)) {
+          caption = caption + space + image.name;
+          space=" ";
+        }
+        if ( image.comment ) {
+          caption = caption + space + image.comment;
+          space=" ";
+        }
+        if ( image.date_creation ) {
+          caption = caption + space + image.date_creation;
+          space=" ";
+        }
+        images.push({
+          "url": `${image.derivatives.large.url}`,
+          "caption": caption,
+        });
+      }
+    }
     return images;
   },
 
