@@ -25,6 +25,8 @@ Module.register("MMM-Wallpaper", {
     flickrDataCacheTime: 24 * 60 * 60 * 1000,
     flickrResultsPerPage: 500, // Flickr API is limited to 500 photos per page
     fadeEdges: false,
+    recurseLocalDirectories: false,
+    blacklist: []
   },
 
   getStyles: function() {

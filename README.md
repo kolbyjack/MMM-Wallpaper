@@ -129,6 +129,7 @@ local:
 |Option|Default|Description|
 |---|---|---|
 |`"recurseLocalDirectories"`|`false`|Whether to recurse into subdirectories when looking for images.|
+|`"blacklist"`| `[]`| An array of strings. Any path containing an element of this array as a substring will not be considered.|
 
 ## Notifications
 
