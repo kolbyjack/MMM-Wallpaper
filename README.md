@@ -128,7 +128,8 @@ local:
 
 |Option|Default|Description|
 |---|---|---|
-|`"recurseLocalDirectories"`|`false`|Whether to recurse into subdirectories when looking for images.|
+|`fileFilter`|`"\\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$"`|Regex to use when filtering files for display.|
+|`recurseLocalDirectories`|`false`|Whether to recurse into subdirectories when looking for images.|
 
 ## Notifications
 

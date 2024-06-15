@@ -183,7 +183,7 @@ module.exports = NodeHelper.create({
     const result = self.getCacheEntry(config);
     const sourcePath = config.source.substring(6).trim();
     const urlPath = `/${self.name}/images/${result.key}/`;
-    const fileMatcher = /\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/;
+    const fileMatcher = new RegExp(config.fileFilter);
 
     if (!(result.key in self.handlers)) {
       var handler = express.static(sourcePath);
