@@ -76,6 +76,7 @@ The following properties can be configured:
 |`"icloud:<album id>"`|Cycles through random selections of the specified album.|
 |`"lightroom:<user.myportfolio.com/album>"`|Cycles through random selections of the specified album.|
 |`"local:</path/to/directory>"`|Cycles through random selections of the images in the specified local directory.|
+|`"piwigo:<url>"`|Cycles through random images from a private piwigo gallery.|
 |`"synology-moments:<url>"`|Cycles through the latest images from the specified Synology moments album.|
 |`"/r/<subreddit>"`|Cycles through the most recent `hot` image posts from the subreddit.|
 |`"/user/<username>/m/<subreddit>"`|Cycles through the most recent `hot` image posts from the specified multireddit.|
@@ -129,6 +130,18 @@ local:
 |Option|Default|Description|
 |---|---|---|
 |`"recurseLocalDirectories"`|`false`|Whether to recurse into subdirectories when looking for images.|
+
+piwigo:
+
+|Option|Description|
+|---|---|
+|`"piwigoUsername"` | A username to log into piwigo.|
+|`"piwigoPassword"` | Password for the above user. |
+|`"piwigoCategory"` | Piwigo category/album to take pictures from. Should be a numer as in the URL. |
+|`"maximumEntries"` | How many images to loop through. Piwigo limits this to 500. |
+
+*Note:*
+* The URL is to the base of the piwigo gallery.
 
 ## Notifications
 
