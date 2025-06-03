@@ -655,6 +655,9 @@ module.exports = NodeHelper.create({
       for (const result of results) {
         images.push(...result);
       }
+      // Deduplicate
+      images = [... new Map(images.map(p => [p.id, p])).values()];
+
       // Each source fetches up to maximumImages images (in case some have fewer).
       // Apply shuffle now, as the consumer will truncate.
       if (config.shuffle) {
