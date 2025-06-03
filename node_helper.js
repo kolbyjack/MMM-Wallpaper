@@ -181,63 +181,87 @@ module.exports = NodeHelper.create({
   readdir: function(config) {
     const self = this;
     const result = self.getCacheEntry(config);
-    const sourcePath = config.source.substring(6).trim();
+    
+    // Process the source string into an array of paths
+    const sourcePaths = config.source.toLowerCase()
+      .replace(/^local:/, '')  // Remove leading 'local:' if present
+      .split(/[,;]/)  // Split by comma or semicolon
+      .map(path => path.trim())
+      .filter(path => path.length > 0);  // Remove empty entries
+    
+    console.log(`Searching for images in the following directories and their subdirectories: ${sourcePaths.join(', ')}`);
+  
     const urlPath = `/${self.name}/images/${result.key}/`;
-    const fileMatcher = /\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/;
-
+    const fileMatcher = /\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/i;
+  
     if (!(result.key in self.handlers)) {
-      var handler = express.static(sourcePath);
-
-      self.handlers[result.key] = handler;
-      self.expressApp.use(urlPath, handler);
+      sourcePaths.forEach((sourcePath, index) => {
+        const handler = express.static(sourcePath);
+        self.handlers[`${result.key}_${index}`] = handler;
+        self.expressApp.use(`${urlPath}${index}/`, handler);
+      });
     }
-
-    async function getFiles(dir, prefix) {
-      const dirents = await fs.promises.readdir(dir, { withFileTypes: true });
-      let result = [];
-
-      for (const dirent of dirents) {
-        const entpath = path.resolve(dir, dirent.name);
-        if (dirent.isDirectory() && config.recurseLocalDirectories) {
-          result = result.concat(await getFiles(entpath, `${prefix}${dirent.name}/`));
-        } else if (dirent.isFile() && dirent.name.toLowerCase().match(fileMatcher) != null) {
-          result.push({
-            url: `${urlPath}${prefix.substring(1)}${dirent.name}`,
-            caption: entpath,
-          });
+  
+    async function getFiles(dirs) {
+      let allFiles = [];
+      let totalFiles = 0;
+  
+      async function traverse(dir, dirIndex, prefix = '') {
+        try {
+          const dirents = await fs.promises.readdir(dir, { withFileTypes: true });
+          for (const dirent of dirents) {
+            const entpath = path.join(dir, dirent.name);
+            if (dirent.isDirectory()) {
+              // Always recurse into subdirectories
+              await traverse(entpath, dirIndex, `${prefix}${dirent.name}/`);
+            } else if (dirent.isFile() && dirent.name.toLowerCase().match(fileMatcher)) {
+              allFiles.push({
+                url: `${urlPath}${dirIndex}/${prefix}${dirent.name}`,
+                caption: entpath,
+              });
+              console.log(`Found file: ${entpath}`);
+              totalFiles++;
+            }
+          }
+        } catch (error) {
+          console.error(`Error reading directory ${dir}:`, error);
         }
       }
-
-      return result;
-    };
-
-    getFiles(sourcePath, "/")
+  
+      for (const [dirIndex, dir] of dirs.entries()) {
+        console.log(`Scanning directory and subdirectories: ${dir}`);
+        await traverse(dir, dirIndex);
+        console.log(`Finished scanning ${dir} and its subdirectories.`);
+      }
+  
+      console.log(`Total files found across all directories and subdirectories: ${totalFiles}`);
+      return allFiles;
+    }
+  
+    getFiles(sourcePaths)
       .then(images => {
+        console.log(`Found ${images.length} images before processing.`);
+        
         if (config.shuffle) {
-          images = shuffle(images);
+          images = self.shuffleArray(images);
+          console.log(`Shuffled ${images.length} images.`);
+        } else {
+          console.log(`Shuffle option is disabled. Images remain in original order.`);
         }
-
+  
         self.cacheResult(config, images);
+        console.log(`Cached ${images.length} images.`);
+      })
+      .catch(error => {
+        console.error("Error in getFiles:", error);
       });
   },
-
-  request: function(config, params) {
-    var self = this;
-
-    if (!("headers" in params)) {
-      params.headers = {};
+    shuffleArray: function(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
     }
-
-    if (!("cache-control" in params.headers)) {
-      params.headers["cache-control"] = "no-cache";
-    }
-
-    fetch(params.url, params)
-      .then((response) => {
-        response.text().then((body) => {
-          self.processResponse(response, body, config);
-        });
-      });
+    return array;
   },
 
   cacheResult: function(config, images) {
