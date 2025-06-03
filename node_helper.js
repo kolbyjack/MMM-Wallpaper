@@ -28,7 +28,7 @@ function shuffle(a) {
 }
 
 function parseBool(val) {
-    var num = +val;
+  var num = +val;
     return !!(val && isNaN(num) ? String(val).toLowerCase().replace(!1,'') : num);
 }
 
@@ -171,7 +171,27 @@ module.exports = NodeHelper.create({
       self.request(config, {
         url: `https://api.nasa.gov/planetary/apod?api_key=${config.nasaApiKey}&start_date=${startDate}`,
       });
-    } else {
+    } else if (source === "unsplash") {
+
+      let orientation = config.orientation == 'landscape' ? 'orientation=landscape' : 'orientation=portrait'
+
+      let query = ""
+      if (typeof config.query == "string" || typeof config.query == "number"){
+        query = config.query;
+      }else{
+        let indiceAleatorio = Math.floor(Math.random() * config.query.length);
+        query = config.query[indiceAleatorio];
+      }
+
+      let url = `https://api.unsplash.com/photos/random?client_id=${config.unsplashAccessKey}&${orientation}&query=${query}`
+      if (config.addCacheBuster) {
+        url = `${url}${(url.indexOf("?") != -1) ? "&" : "?"}mmm-wallpaper-ts=${Date.now()}`;
+      }
+      self.request(config, {
+        url
+      })
+    }
+    else {
       self.request(config, {
         url: `https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=${config.maximumEntries}`,
       });
@@ -282,6 +302,8 @@ module.exports = NodeHelper.create({
       images = self.processNasaData(config, JSON.parse(body));
     } else if ((source === "apod") || (source === "apodhd")) {
       images = self.processApodData(config, JSON.parse(body));
+    } else if (source === "unsplash") {
+      images = self.processUnsplashData(config, JSON.parse(body));
     } else {
       images = self.processBingData(config, JSON.parse(body));
     }
@@ -308,7 +330,20 @@ module.exports = NodeHelper.create({
     return images;
   },
 
-  processBingData: function(config, data) {
+
+  processUnsplashData: function (config, source) {
+    var images = [];
+
+    images.push({
+      url: source.links.download,
+      caption: `${source.user.name} ${source.user.locatio ? `- ${source.user.location}` : ''} - ${source.description || source.alt_description}`
+    });
+
+    return images;
+  },
+
+
+  processBingData: function (config, data) {
     var self = this;
     var width = (config.orientation === "vertical") ? 1080 : 1920;
     var height = (config.orientation === "vertical") ? 1920 : 1080;
@@ -331,10 +366,10 @@ module.exports = NodeHelper.create({
     var images = [];
     for (var post of data.data.children) {
       if (post.kind === "t3"
-          && !post.data.pinned
-          && !post.data.stickied
-          && post.data.post_hint === "image"
-          && (config.nsfw || !post.data.over_18)) {
+        && !post.data.pinned
+        && !post.data.stickied
+        && post.data.post_hint === "image"
+        && (config.nsfw || !post.data.over_18)) {
         var variants = post.data.preview.images[0].resolutions.slice(0);
 
         variants.push(post.data.preview.images[0].source);

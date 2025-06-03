@@ -71,6 +71,7 @@ The following properties can be configured:
 |`"bing"`|Cycles through the most recent daily wallpapers from Bing.|
 |`"chromecast"`|Cycles through random selections of the Chromecast wallpapers (thanks TheLukaBoss).|
 |`"firetv"`|Cycles through random selections of the FireTV wallpapers.|
+|`"unsplash"`|Cycles through random selections of unsplash.|
 |`"flickr-api:<source>"`|Cycles through random selections of the specified flickr photos.  See below for details.|
 |`"http(s)://url"`|Reloads the specified url at the configured interval.|
 |`"icloud:<album id>"`|Cycles through random selections of the specified album.|
@@ -89,6 +90,17 @@ apod / apodhd:
 |Option|Default|Description|
 |---|---|---|
 |`"nasaApiKey"`|`none`|Sign up for an [api key](https://api.nasa.gov/) and enter it here. (Required)|
+
+unsplash:
+
+|Option|Default|Description|
+|---|---|---|
+|`"unsplashAccessKey"`|`none`|Sign up for an [api key](https://unsplash.com/developers/) and enter it here. (Required)|
+|`"query"`|`none`|Limit selection to photos matching a search term. use an array for random query params.|
+
+Note: You can’t use the collections or topics filtering with query parameters in the same request
+
+
 
 flickr-api:
 
