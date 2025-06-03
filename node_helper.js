@@ -184,6 +184,7 @@ module.exports = NodeHelper.create({
     const sourcePath = config.source.substring(6).trim();
     const urlPath = `/${self.name}/images/${result.key}/`;
     const fileMatcher = /\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/;
+    const blacklist = config.blacklist;
 
     if (!(result.key in self.handlers)) {
       var handler = express.static(sourcePath);
@@ -196,8 +197,18 @@ module.exports = NodeHelper.create({
       const dirents = await fs.promises.readdir(dir, { withFileTypes: true });
       let result = [];
 
+      outer:
       for (const dirent of dirents) {
         const entpath = path.resolve(dir, dirent.name);
+
+        if (blacklist) {
+          for (const entry of blacklist) {
+            if (entpath.includes(entry)) {
+              continue outer
+            }
+          }
+        }
+
         if (dirent.isDirectory() && config.recurseLocalDirectories) {
           result = result.concat(await getFiles(entpath, `${prefix}${dirent.name}/`));
         } else if (dirent.isFile() && dirent.name.toLowerCase().match(fileMatcher) != null) {
