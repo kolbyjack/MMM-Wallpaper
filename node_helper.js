@@ -88,6 +88,14 @@ module.exports = NodeHelper.create({
         self.firetv = JSON.parse(fs.readFileSync(`${__dirname}/firetv.json`));
       }
       self.cacheResult(config, shuffle(self.firetv.images));
+    } else if (source.startsWith("mmm-api:")) {
+      let url = config.source.substring(config.source.indexOf(':') + 1);
+      if (config.addCacheBuster) {
+        url = `${url}${(url.indexOf("?") != -1) ? "&" : "?"}mmm-wallpaper-ts=${Date.now()}`;
+      }
+      self.request(config, {
+        url: source.substring(source.indexOf(':') + 1),
+      });
     } else if (source === "chromecast") {
       if (self.chromecast === null) {
         self.chromecast = JSON.parse(fs.readFileSync(`${__dirname}/chromecast.json`));
@@ -282,6 +290,8 @@ module.exports = NodeHelper.create({
       images = self.processNasaData(config, JSON.parse(body));
     } else if ((source === "apod") || (source === "apodhd")) {
       images = self.processApodData(config, JSON.parse(body));
+    } else if (source.startsWith("mmm-api:")) {
+      images = self.processMmmApiData(config, JSON.parse(body));
     } else {
       images = self.processBingData(config, JSON.parse(body));
     }
@@ -614,6 +624,14 @@ module.exports = NodeHelper.create({
       }
     }
 
+    return images;
+  },
+
+  processMmmApiData: function (config, data) {
+    const images = [];
+    for (const image of data) {
+      images.unshift(image)
+    }
     return images;
   },
 
