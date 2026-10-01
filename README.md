@@ -84,12 +84,6 @@ The following properties can be configured:
 
 Source-specific configuration items:
 
-apod / apodhd:
-
-|Option|Default|Description|
-|---|---|---|
-|`"nasaApiKey"`|`none`|Sign up for an [api key](https://api.nasa.gov/) and enter it here. (Required)|
-
 flickr-api:
 
 |Option|Default|Description|
