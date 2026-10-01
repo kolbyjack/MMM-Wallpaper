@@ -619,9 +619,15 @@ module.exports = NodeHelper.create({
     return images;
   },
 
+  /* In version 2 of NASAs APOD API, they stopped listing the image URL in the 'url' field of their
+     JSON response.  Instead, 'url' lists the APOD post URL, and 'hdurl' is the only field that
+     actually gives the URL of the image.  We use the 'hdurl' value to try to back out the URL
+     for the standard version of the image, and if that doesn't work we just use the HD version.
+     */
   processApodData: function (config, data) {
     const images = [];
-    const key = (config.source === "apod") ? "url" : "hdurl";
+    const key = "hdurl";
+    //const key = (config.source === "apod") ? "url" : "hdurl";
 
     for (const image of data) {
       if ((image.media_type === "image") && (key in image)) {
@@ -629,6 +635,15 @@ module.exports = NodeHelper.create({
           url: image[key],
           caption: image.title,
         });
+      }
+
+      // If the user selected apod instead of apodhd, try to get the standard def URL.
+      if (config.source === "apod") {
+        var splitUrl = image.url.split("?");
+        
+        if (splitUrl[0] !== null) {
+          image.url == splitUrl[0];
+        }
       }
     }
 
