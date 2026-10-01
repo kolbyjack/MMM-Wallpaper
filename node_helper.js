@@ -167,9 +167,11 @@ module.exports = NodeHelper.create({
     } else if ((source === "apod") || (source === "apodhd")) {
       let startDate = new Date();
       startDate.setDate(startDate.getDate() - config.maximumEntries);
-      startDate = `${startDate.getFullYear()}-${z(startDate.getMonth() + 1)}-${z(startDate.getDate())}`;
+      var dateStr = `${startDate.getFullYear()}`;
+      dateStr = dateStr.substr(dateStr.length - 2);
+      dateStr = dateStr + `${z(startDate.getMonth() + 1)}${z(startDate.getDate())}`;
       self.request(config, {
-        url: `https://api.nasa.gov/planetary/apod?api_key=${config.nasaApiKey}&start_date=${startDate}`,
+        url: `https://science.nasa.gov/wp-json/wp/v2/apod-basic?date_from=${dateStr}`,
       });
     } else {
       self.request(config, {
