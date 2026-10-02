@@ -61,7 +61,6 @@ module.exports = NodeHelper.create({
     self.cache = {};
     self.handlers = {};
     self.firetv = null;
-    self.chromecast = null;
   },
 
   socketNotificationReceived: function(notification, payload) {
@@ -89,10 +88,9 @@ module.exports = NodeHelper.create({
       }
       self.cacheResult(config, shuffle(self.firetv.images));
     } else if (source === "chromecast") {
-      if (self.chromecast === null) {
-        self.chromecast = JSON.parse(fs.readFileSync(`${__dirname}/chromecast.json`));
-      }
-      self.cacheResult(config, shuffle(self.chromecast));
+      self.request(config, {
+        url: "https://clients3.google.com/cast/chromecast/home/v/c9541b08",
+      });
     } else if (source.startsWith("local:")) {
       self.readdir(config);
     } else if (source.startsWith("http://") || source.startsWith("https://")) {
@@ -282,6 +280,8 @@ module.exports = NodeHelper.create({
       images = self.processNasaData(config, JSON.parse(body));
     } else if ((source === "apod") || (source === "apodhd")) {
       images = self.processApodData(config, JSON.parse(body));
+    } else if (source === "chromecast") {
+      images = self.processChromecastData(config, body);
     } else {
       images = self.processBingData(config, JSON.parse(body));
     }
@@ -640,6 +640,17 @@ module.exports = NodeHelper.create({
           caption: image.title,
         });
       }
+    }
+
+    return images;
+  },
+
+  processChromecastData: function (config, body) {
+    const initState = eval(body.match(/JSON\.parse\('[^']+?'\)/)[0]);
+    const images = [];
+
+    for (let entry of initState[0]) {
+      images.push({ url: entry[0], caption: entry[1] });
     }
 
     return images;
