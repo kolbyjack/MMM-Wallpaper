@@ -167,9 +167,9 @@ module.exports = NodeHelper.create({
     } else if ((source === "apod") || (source === "apodhd")) {
       let startDate = new Date();
       startDate.setDate(startDate.getDate() - config.maximumEntries);
-      startDate = `${startDate.getFullYear()}-${z(startDate.getMonth() + 1)}-${z(startDate.getDate())}`;
+      var dateStr = `${z(startDate.getFullYear() % 100)}${z(startDate.getMonth() + 1)}${z(startDate.getDate())}`;
       self.request(config, {
-        url: `https://api.nasa.gov/planetary/apod?api_key=${config.nasaApiKey}&start_date=${startDate}`,
+        url: `https://science.nasa.gov/wp-json/wp/v2/apod-basic?date_from=${dateStr}`,
       });
     } else {
       self.request(config, {
@@ -617,14 +617,26 @@ module.exports = NodeHelper.create({
     return images;
   },
 
+  /* In version 2 of NASAs APOD API they stopped listing the SD image URL in the 'url' field of 
+     their JSON response.  Instead, 'url' lists the APOD post URL, and 'hdurl' is the only field that
+     actually gives the URL of the image.  If the user has set the config for 'apod', we use the 
+     'hdurl' value to back out the value of the standard def URL.
+     */
   processApodData: function (config, data) {
     const images = [];
-    const key = (config.source === "apod") ? "url" : "hdurl";
+    const key = "hdurl";
 
     for (const image of data) {
       if ((image.media_type === "image") && (key in image)) {
+        var imgUrl = image[key];
+
+        if (config.source === "apod") {
+            var workingUrl = new URL(imgUrl);
+            imgUrl = workingUrl.origin + workingUrl.pathname;
+        } 
+
         images.unshift({
-          url: image[key],
+          url: imgUrl,
           caption: image.title,
         });
       }
