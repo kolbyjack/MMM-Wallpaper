@@ -25,6 +25,7 @@ Module.register("MMM-Wallpaper", {
     flickrDataCacheTime: 24 * 60 * 60 * 1000,
     flickrResultsPerPage: 500, // Flickr API is limited to 500 photos per page
     fadeEdges: false,
+    kenBurnsEffect: false,
   },
 
   getStyles: function() {
@@ -63,6 +64,10 @@ Module.register("MMM-Wallpaper", {
       self.content.className = "content";
       self.content.style.width = self.config.width;
       self.content.style.height = self.config.height;
+    }
+
+    if (self.config.kenBurnsEffect) {
+      self.content.classList.add('ken-burns')
     }
 
     self.imageElement = null;
@@ -141,7 +146,19 @@ Module.register("MMM-Wallpaper", {
     return () => {
       self.resetLoadImageTimer();
 
-      element.className = `wallpaper ${self.config.crossfade ? "crossfade-image" : ""}`;
+      element.className = 'wallpaper';
+
+      if(self.config.crossfade) {
+        element.classList.add('crossfade-image');
+      }
+
+      if(self.config.kenBurnsEffect) {
+        element.classList.add('ken-burns-animation');
+        element.style.setProperty('--transform-origin', self.getRandomOrigin());
+        element.style.setProperty('--animation-duration', `${self.config.slideInterval / 1000}s`);
+        element.style.setProperty('--zoom-direction', self.getRandomZoomDirection());
+      }
+
       element.style.opacity = 1;
       self.title.style.display = "none";
 
@@ -239,5 +256,14 @@ Module.register("MMM-Wallpaper", {
       clearTimeout(self.loadNextImageTimer);
       self.loadNextImageTimer = setTimeout(() => self.loadNextImage(), self.config.slideInterval);
     }
+  },
+
+  getRandomOrigin: function() {
+    const corners = ['top left', 'top right', 'bottom left', 'bottom right'];
+    return corners[Math.floor(Math.random() * corners.length)];
+  },
+
+  getRandomZoomDirection: function() {
+    return Math.random() < 0.5 ? 'zoom-in' : 'zoom-out';
   },
 });
