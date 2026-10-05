@@ -653,7 +653,7 @@ module.exports = NodeHelper.create({
       images.push({ url: entry[0], caption: entry[1] });
     }
 
-    return images;
+    return shuffle(images);
   },
 
   fetchFlickrApi: function(config) {
