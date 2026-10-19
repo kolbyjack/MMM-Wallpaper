@@ -79,6 +79,8 @@ Module.register("MMM-Wallpaper", {
       self.hide();
     } else if (notification === "LOAD_NEXT_WALLPAPER") {
       self.loadNextImage();
+    } else if (notification === "LOAD_PREVIOUS_WALLPAPER") {
+      self.loadPreviousImage();
     } else if (notification === "USER_PRESENCE") {
       if (self.config.userPresenceAction === "show") {
         payload ? self.show() : self.hide();
@@ -213,6 +215,14 @@ Module.register("MMM-Wallpaper", {
   },
 
   loadNextImage: function() {
+    this.loadImage((this.imageIndex + 1) % this.images.length);
+  },
+
+  loadPreviousImage: function() {
+    this.loadImage((this.imageIndex - 1 + this.images.length) % this.images.length);
+  },
+
+  loadImage: function(index) {
     var self = this;
 
     self.resetLoadImageTimer();
@@ -223,7 +233,7 @@ Module.register("MMM-Wallpaper", {
       self.nextImageElement = null;
     }
 
-    self.imageIndex = (self.imageIndex + 1) % self.images.length;
+    self.imageIndex = index;
 
     const nextImageData = self.images[self.imageIndex];
     if (nextImageData !== null) {
