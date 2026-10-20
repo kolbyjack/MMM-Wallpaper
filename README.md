@@ -4,17 +4,17 @@ The module allows you to add wallpapers from various online sources.  Useful for
 ## Installation
 
 In your terminal, go to your MagicMirror's Module folder:
-````
+````sh
 cd ~/MagicMirror/modules
 ````
 
 Clone this repository:
-````
+````sh
 git clone https://github.com/kolbyjack/MMM-Wallpaper.git
 ````
 
 Install the module dependencies:
-````
+````sh
 cd MMM-Wallpaper
 npm install
 ````
