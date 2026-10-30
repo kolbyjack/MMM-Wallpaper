@@ -61,7 +61,6 @@ module.exports = NodeHelper.create({
     self.cache = {};
     self.handlers = {};
     self.firetv = null;
-    self.chromecast = null;
   },
 
   socketNotificationReceived: function(notification, payload) {
@@ -97,10 +96,9 @@ module.exports = NodeHelper.create({
         url: source.substring(source.indexOf(':') + 1),
       });
     } else if (source === "chromecast") {
-      if (self.chromecast === null) {
-        self.chromecast = JSON.parse(fs.readFileSync(`${__dirname}/chromecast.json`));
-      }
-      self.cacheResult(config, shuffle(self.chromecast));
+      self.request(config, {
+        url: "https://clients3.google.com/cast/chromecast/home/v/c9541b08",
+      });
     } else if (source.startsWith("local:")) {
       self.readdir(config);
     } else if (source.startsWith("http://") || source.startsWith("https://")) {
@@ -175,9 +173,9 @@ module.exports = NodeHelper.create({
     } else if ((source === "apod") || (source === "apodhd")) {
       let startDate = new Date();
       startDate.setDate(startDate.getDate() - config.maximumEntries);
-      startDate = `${startDate.getFullYear()}-${z(startDate.getMonth() + 1)}-${z(startDate.getDate())}`;
+      var dateStr = `${z(startDate.getFullYear() % 100)}${z(startDate.getMonth() + 1)}${z(startDate.getDate())}`;
       self.request(config, {
-        url: `https://api.nasa.gov/planetary/apod?api_key=${config.nasaApiKey}&start_date=${startDate}`,
+        url: `https://science.nasa.gov/wp-json/wp/v2/apod-basic?date_from=${dateStr}`,
       });
     } else {
       self.request(config, {
@@ -292,6 +290,8 @@ module.exports = NodeHelper.create({
       images = self.processApodData(config, JSON.parse(body));
     } else if (source.startsWith("mmm-api:")) {
       images = self.processMmmApiData(config, JSON.parse(body));
+    } else if (source === "chromecast") {
+      images = self.processChromecastData(config, body);
     } else {
       images = self.processBingData(config, JSON.parse(body));
     }
@@ -635,20 +635,43 @@ module.exports = NodeHelper.create({
     return images;
   },
 
+  /* In version 2 of NASAs APOD API they stopped listing the SD image URL in the 'url' field of 
+     their JSON response.  Instead, 'url' lists the APOD post URL, and 'hdurl' is the only field that
+     actually gives the URL of the image.  If the user has set the config for 'apod', we use the 
+     'hdurl' value to back out the value of the standard def URL.
+     */
   processApodData: function (config, data) {
     const images = [];
-    const key = (config.source === "apod") ? "url" : "hdurl";
+    const key = "hdurl";
 
     for (const image of data) {
       if ((image.media_type === "image") && (key in image)) {
+        var imgUrl = image[key];
+
+        if (config.source === "apod") {
+            var workingUrl = new URL(imgUrl);
+            imgUrl = workingUrl.origin + workingUrl.pathname;
+        } 
+
         images.unshift({
-          url: image[key],
+          url: imgUrl,
           caption: image.title,
         });
       }
     }
 
     return images;
+  },
+
+  processChromecastData: function (config, body) {
+    const initState = eval(body.match(/JSON\.parse\('[^']+?'\)/)[0]);
+    const images = [];
+
+    for (let entry of initState[0]) {
+      images.push({ url: entry[0], caption: entry[1] });
+    }
+
+    return shuffle(images);
   },
 
   fetchFlickrApi: function(config) {
