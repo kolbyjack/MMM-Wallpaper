@@ -87,13 +87,13 @@ module.exports = NodeHelper.create({
         self.firetv = JSON.parse(fs.readFileSync(`${__dirname}/firetv.json`));
       }
       self.cacheResult(config, shuffle(self.firetv.images));
-    } else if (source.startsWith("mmm-api:")) {
-      let url = config.source.substring(config.source.indexOf(':') + 1);
+    } else if (source.startsWith("json+http://") || source.startsWith("json+https://")) {
+      let url = config.source.substring(5);
       if (config.addCacheBuster) {
         url = `${url}${(url.indexOf("?") != -1) ? "&" : "?"}mmm-wallpaper-ts=${Date.now()}`;
       }
       self.request(config, {
-        url: source.substring(source.indexOf(':') + 1),
+        url: url,
       });
     } else if (source === "chromecast") {
       self.request(config, {
@@ -288,8 +288,8 @@ module.exports = NodeHelper.create({
       images = self.processNasaData(config, JSON.parse(body));
     } else if ((source === "apod") || (source === "apodhd")) {
       images = self.processApodData(config, JSON.parse(body));
-    } else if (source.startsWith("mmm-api:")) {
-      images = self.processMmmApiData(config, JSON.parse(body));
+    } else if (source.startsWith("json+http://") || source.startsWith("json+https://")) {
+      images = JSON.parse(body) || [];
     } else if (source === "chromecast") {
       images = self.processChromecastData(config, body);
     } else {
@@ -624,14 +624,6 @@ module.exports = NodeHelper.create({
       }
     }
 
-    return images;
-  },
-
-  processMmmApiData: function (config, data) {
-    const images = [];
-    for (const image of data) {
-      images.unshift(image)
-    }
     return images;
   },
 
