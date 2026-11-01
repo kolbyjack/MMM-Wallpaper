@@ -87,6 +87,14 @@ module.exports = NodeHelper.create({
         self.firetv = JSON.parse(fs.readFileSync(`${__dirname}/firetv.json`));
       }
       self.cacheResult(config, shuffle(self.firetv.images));
+    } else if (source.startsWith("json+http://") || source.startsWith("json+https://")) {
+      let url = config.source.substring(5);
+      if (config.addCacheBuster) {
+        url = `${url}${(url.indexOf("?") != -1) ? "&" : "?"}mmm-wallpaper-ts=${Date.now()}`;
+      }
+      self.request(config, {
+        url: url,
+      });
     } else if (source === "chromecast") {
       self.request(config, {
         url: "https://clients3.google.com/cast/chromecast/home/v/c9541b08",
@@ -280,6 +288,8 @@ module.exports = NodeHelper.create({
       images = self.processNasaData(config, JSON.parse(body));
     } else if ((source === "apod") || (source === "apodhd")) {
       images = self.processApodData(config, JSON.parse(body));
+    } else if (source.startsWith("json+http://") || source.startsWith("json+https://")) {
+      images = JSON.parse(body) || [];
     } else if (source === "chromecast") {
       images = self.processChromecastData(config, body);
     } else {
