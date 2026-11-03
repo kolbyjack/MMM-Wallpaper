@@ -8,11 +8,20 @@ const https = require("https");
 const Flickr = require("flickr-sdk");
 const NodeCache = require("node-cache");
 
+if (typeof (fetch) === "undefined") {
+  fetch = require("fetch");
+}
+
 class WallpaperSource {
   constructor(module, config, id) {
     this.module = module;
     this.config = config;
     this.id = id;
+    this.requestHandler = null;
+    this.imageCache = {
+      images: [],
+      expires: Date.now(),
+    };
   }
 
   request(params) {
@@ -33,11 +42,12 @@ class WallpaperSource {
   }
 
   cacheResult(images) {
-    this.module.cacheResult(this.id, images);
-  }
+    if (Array.isArray(images) && (images.length > 0)) {
+      this.imageCache.expires = Date.now() + this.config.updateInterval * 0.9;
+      this.imageCache.images = images;
 
-  registerImageHandler(handler) {
-    return this.module.registerImageHandler(this.id, handler);
+      this.module.onSourceUpdated(this);
+    }
   }
 
   fetch() {
@@ -49,7 +59,11 @@ class WallpaperSource {
   }
 
   refresh() {
-    this.fetch();
+    if ((this.config.maximumEntries <= this.imageCache.images.length) && (Date.now() < this.imageCache.expires)) {
+      this.module.onSourceUpdated(this);
+    } else {
+      this.fetch();
+    }
   }
 
   shuffle(items) {
@@ -108,6 +122,14 @@ class ApodSource extends WallpaperSource {
 }
 
 class BingSource extends WallpaperSource {
+  constructor(module, config, id) {
+    super(module, config, id);
+
+    const width = config.orientation === "vertical" ? 1080 : 1920;
+    const height = config.orientation === "vertical" ? 1920 : 1080;
+    this.suffix = `_${width}x${height}.jpg`;
+  }
+
   static matches(source) {
     return source === "bing";
   }
@@ -117,11 +139,7 @@ class BingSource extends WallpaperSource {
   }
 
   processResponse(body) {
-    const width = this.config.orientation === "vertical" ? 1080 : 1920;
-    const height = this.config.orientation === "vertical" ? 1920 : 1080;
-    const suffix = `_${width}x${height}.jpg`;
-
-    return JSON.parse(body).images.map(image => ({ url: `https://www.bing.com${image.urlbase}${suffix}`, caption: image.copyright }));
+    return JSON.parse(body).images.map(image => ({ url: `https://www.bing.com${image.urlbase}${this.suffix}`, caption: image.copyright }));
   }
 }
 
@@ -157,15 +175,17 @@ class DirectUrlSource extends WallpaperSource {
 }
 
 class FireTvSource extends WallpaperSource {
+  constructor(module, config, id) {
+    super(module, config, id);
+
+    this.images = JSON.parse(fs.readFileSync(`${__dirname}/firetv.json`)).images;
+  }
+
   static matches(source) {
     return source === "firetv";
   }
 
   fetch() {
-    if (!this.images) {
-      this.images = JSON.parse(fs.readFileSync(`${__dirname}/firetv.json`)).images;
-    }
-
     this.cacheResult(this.shuffle(this.images));
   }
 }
@@ -175,18 +195,19 @@ class FlickrSource extends WallpaperSource {
     return source.startsWith("flickr-api:");
   }
 
+  constructor(module, config, id) {
+    super(module, config, id);
+
+    this.sources = config.source.substring(11).split(";");
+    this.flickr = new Flickr(config.flickrApiKey);
+    this.flickr.favorites.getPhotos = this.flickr.favorites.getList;
+    this.feeds = new Flickr.Feeds();
+    this.dataCache = new NodeCache();
+  }
+
   fetch() {
-    if (!this.flickr) {
-      this.flickr = new Flickr(this.config.flickrApiKey);
-      this.flickr.favorites.getPhotos = this.flickr.favorites.getList;
-      this.feeds = new Flickr.Feeds();
-      this.dataCache = new NodeCache();
-    }
-
-    const sources = this.config.source.substring(11).split(";");
-
-    Promise.all(sources.map(source => this.fetchOneSource(source))).then(results => {
-      let photos = results.flat();
+    Promise.all(this.sources.map(source => this.fetchOneSource(source))).then(results => {
+      let photos = [...new Map(results.flat().map(p => [p.id, p])).values()];
 
       if (this.config.shuffle) {
         photos = this.shuffle(photos);
@@ -365,12 +386,18 @@ class JsonSource extends WallpaperSource {
 }
 
 class LightroomSource extends WallpaperSource {
+  constructor(module, config, id) {
+    super(module, config, id);
+
+    this.url = `https://${config.source.substring(10).trim()}`;
+  }
+
   static matches(source) {
     return source.startsWith("lightroom:");
   }
 
   fetch() {
-    this.request({ url: `https://${this.config.source.substring(10).trim()}` });
+    this.request({ url: this.url });
   }
 
   processResponse(body) {
@@ -411,11 +438,11 @@ class LocalSource extends WallpaperSource {
   constructor(module, config, id) {
     super(module, config, id);
 
-    this.registerImageHandler(express.static(this.config.source.substring(6).trim()));
+    this.sourcePath = config.source.substring(6).trim();
+    this.requestHandler = express.static(this.sourcePath);
   }
 
   fetch() {
-    const sourcePath = this.config.source.substring(6).trim();
     const fileMatcher = /\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/;
 
     const getFiles = async (dir, prefix) => {
@@ -434,21 +461,25 @@ class LocalSource extends WallpaperSource {
       return images;
     };
 
-    getFiles(sourcePath, "/").then(images => {
+    getFiles(this.sourcePath, "/").then(images => {
       this.cacheResult(this.config.shuffle ? this.shuffle(images) : images);
     });
   }
 }
 
 class MetMuseumSource extends WallpaperSource {
+  constructor(module, config, id) {
+    super(module, config, id);
+
+    this.searchArgs = config.source.substring(10).split(",");
+  }
+
   static matches(source) {
     return source.startsWith("metmuseum:");
   }
 
   fetch() {
-    const args = this.config.source.substring(10).split(",");
-
-    this.request({ url: `https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&departmentId=${args[0]}&isHighlight=${args[1]}&q=${args[2]}` });
+    this.request({ url: `https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&departmentId=${this.searchArgs[0]}&isHighlight=${this.searchArgs[1]}&q=${this.searchArgs[2]}` });
   }
 
   processResponse(body) {
@@ -488,19 +519,23 @@ class MetMuseumSource extends WallpaperSource {
 }
 
 class NasaSource extends WallpaperSource {
+  constructor(module, config, id) {
+    super(module, config, id);
+
+    this.searchTerm = config.source.split(":")[1];
+  }
+
   static matches(source) {
     return source.startsWith("nasa:");
   }
 
   fetch() {
-    const searchTerm = this.config.source.split(":")[1];
-
-    if (!searchTerm) {
+    if (!this.searchTerm) {
       console.error("MMM-Wallpaper: Please specify search term for NASA API");
       return;
     }
 
-    this.request({ url: `https://images-api.nasa.gov/search?q=${searchTerm}` });
+    this.request({ url: `https://images-api.nasa.gov/search?q=${this.searchTerm}` });
   }
 
   processResponse(body) {
@@ -572,9 +607,15 @@ class SynologyMomentsSource extends WallpaperSource {
   constructor(module, config, id) {
     super(module, config, id);
 
+    this.sharedAlbumUrlText = config.source.substring(17).trim();
+    const sharedAlbumUrl = new URL(this.sharedAlbumUrlText);
+    const lastSlash = sharedAlbumUrl.pathname.lastIndexOf("/");
+    this.apiPath = `${sharedAlbumUrl.pathname.substring(0, lastSlash)}/webapi/entry.cgi`;
+    this.apiUrl = `${sharedAlbumUrl.protocol}//${sharedAlbumUrl.host}${this.apiPath}`;
+    this.album = sharedAlbumUrl.pathname.substring(lastSlash + 1);
     this.imageMap = {};
     this.sessionCookie = null;
-    this.registerImageHandler(this.makeImageHandler(new URL(this.config.source.substring(17).trim())));
+    this.requestHandler = this.makeImageHandler(sharedAlbumUrl);
   }
 
   makeImageHandler(url) {
@@ -610,15 +651,10 @@ class SynologyMomentsSource extends WallpaperSource {
 
   fetch() {
     this.state = "create_session";
-    this.request({ url: this.config.source.substring(17).trim() });
+    this.request({ url: this.sharedAlbumUrlText });
   }
 
   processResponse(body, response) {
-    const url = new URL(this.config.source.substring(17).trim());
-    const lastSlash = url.pathname.lastIndexOf("/");
-    const apiPath = `${url.pathname.substring(0, lastSlash)}/webapi/entry.cgi`;
-    const apiUrl = `${url.protocol}//${url.host}${apiPath}`;
-    const album = url.pathname.substring(lastSlash + 1);
     if (response.status !== 200) {
       console.error(`ERROR: ${response.status} -- ${body}`);
       return [];
@@ -630,11 +666,11 @@ class SynologyMomentsSource extends WallpaperSource {
         this.state = "browse_item";
         this.request({
           method: "POST",
-          url: apiUrl,
-          body: `additional=["thumbnail","resolution","orientation","video_convert","video_meta"]&offset=0&limit=${this.config.maximumEntries}&passphrase="${album}"&api="SYNO.Photo.Browse.Item"&method="list"&version=3`,
+          url: this.apiUrl,
+          body: `additional=["thumbnail","resolution","orientation","video_convert","video_meta"]&offset=0&limit=${this.config.maximumEntries}&passphrase="${this.album}"&api="SYNO.Photo.Browse.Item"&method="list"&version=3`,
           headers: {
             cookie: this.sessionCookie,
-            "x-syno-sharing": album
+            "x-syno-sharing": this.album
           }
         });
       }
@@ -643,7 +679,7 @@ class SynologyMomentsSource extends WallpaperSource {
     const data = JSON.parse(body);
 
     return data.data.list.map(item => {
-      this.imageMap[`/${item.id}`] = `${apiPath}?id=${item.id}&cache_key=${item.additional.thumbnail.cache_key}&type="unit"&size="xl"&api="SYNO.Photo.Thumbnail"&method="get"&version=1&_sharing_id="${album}"&passphrase="${album}"`;
+      this.imageMap[`/${item.id}`] = `${this.apiPath}?id=${item.id}&cache_key=${item.additional.thumbnail.cache_key}&type="unit"&size="xl"&api="SYNO.Photo.Thumbnail"&method="get"&version=1&_sharing_id="${this.album}"&passphrase="${this.album}"`;
       return { url: item.id };
     });
   }
