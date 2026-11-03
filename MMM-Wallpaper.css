@@ -49,3 +49,26 @@
   height: 10%;
   background: linear-gradient(transparent, black);
 }
+
+.MMM-Wallpaper .ken-burns {
+  overflow: hidden;
+  position: relative;
+}
+
+.MMM-Wallpaper .ken-burns-animation {
+  animation: kenBurns var(--animation-duration) infinite;
+  transform-origin: var(--transform-origin);
+}
+
+.MMM-Wallpaper .zoom-out {
+  animation-direction: reverse;
+}
+
+@keyframes kenBurns {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+      transform: scale(1.2);
+  }
+}
