@@ -73,8 +73,8 @@ The following properties can be configured:
 |`"firetv"`|Cycles through random selections of the FireTV wallpapers.|
 |`"flickr-api:<source>"`|Cycles through random selections of the specified flickr photos.  See below for details.|
 |`"http(s)://url"`|Reloads the specified url at the configured interval.|
-|`"json+http(s):url"`|For any endpoint that returns a JSON list of images as `[{"url":"...","caption":"..."}]`|
 |`"icloud:<album id>"`|Cycles through random selections of the specified album.|
+|`"json+http(s)://url"`|For any endpoint that returns a JSON list of images as `[{"url":"...","caption":"..."}]`|
 |`"lightroom:<user.myportfolio.com/album>"`|Cycles through random selections of the specified album.|
 |`"local:</path/to/directory>"`|Cycles through random selections of the images in the specified local directory.|
 |`"synology-moments:<url>"`|Cycles through the latest images from the specified Synology moments album.|
