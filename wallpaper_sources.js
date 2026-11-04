@@ -565,6 +565,115 @@ class PexelsSource extends WallpaperSource {
   }
 }
 
+class PiwigoSource extends WallpaperSource {
+  static matches(source) {
+    return (source === "piwigo") || (source.startsWith("piwigo:"));
+  }
+
+  constructor(module, config, id) {
+    super(module, config, id);
+
+    if (!this.config.piwigoBaseUrl) {
+      if (this.config.source.startsWith("piwigo:")) {
+        this.config.piwigoBaseUrl = this.config.source.substr(7);
+      }
+      if (!this.config.piwigoBaseUrl) {
+        this.config.piwigoBaseUrl = "https://piwigo.org";
+      }
+    }
+
+    this.state = "idle";
+  }
+
+  fetch() {
+    if (this.state !== "idle") {
+      return;
+    }
+
+    const username = encodeURIComponent(this.config.piwigoUsername);
+    const password = encodeURIComponent(this.config.piwigoPassword);
+
+    this.state = "create_session";
+    this.request({
+      method: "POST",
+      url: `${this.config.piwigoBaseUrl}/ws.php`,
+      headers: {
+        Authorization: this.config.piwigoApiKey,
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      },
+      body: `method=pwg.session.login&username=${username}&password=${password}&format=json`,
+    });
+  }
+
+  parseCookies(response) {
+    // It seems three cookies are returned. Two pwg_id cookies of which we need
+    // the last one, and pwg_remember which is set to deleted. We don't need
+    // that. So we will just get the last pwg_id cookie.
+    const cookies = response.headers.get("set-cookie");
+    const cookiestart = cookies.substring(cookies.lastIndexOf("pwg_id"));
+    return cookiestart.split(";")[0];
+  }
+
+  processResponse(body, response) {
+    if (response.status !== 200) {
+      console.error(`ERROR: ${response.status} -- ${body}`);
+    } else if (this.state === "create_session") {
+      return this.onSessionCreated(body, response);
+    } else if (this.state === "fetching_images") {
+      return this.onImagesRetrieved(body, response);
+    } else {
+      console.error(`ERROR: Unexpected state: ${this.state}`);
+    }
+
+    this.state = "idle";
+    return [];
+  }
+
+  onSessionCreated(body, response) {
+    if (!("set-cookie" in response.headers)) {
+      return [];
+    }
+
+    let body = `method=pwg.categories.getImages&cat_id=${this.config.piwigoCategory}&per_page=${this.config.maximumEntries}&format=json`;
+    if (this.config.shuffle) {
+      body += "&order=random";
+    }
+
+    this.sessionCookie = this.parseCookies(response);
+    this.state = "fetching_images";
+    this.request({
+      method: "POST",
+      url: this.apiUrl,
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        Cookie: this.sessionCookie
+      },
+      body: body,
+    });
+  }
+
+  onImagesRetrieved(body) {
+    this.state = "idle";
+    return JSON.parse(body).result.images.map(item => {
+      const caption = [];
+      if (item.name && (item.name !== item.file)) {
+        caption.push(item.name);
+      }
+      if (item.comment) {
+        caption.push(item.comment);
+      }
+      if (item.date_creation) {
+        caption.push(item.date_creation);
+      }
+      return {
+        url: item.derivatives.large.url,
+        caption: caption.join(" ")
+      };
+    });
+  }
+}
+
 class RedditSource extends WallpaperSource {
   static matches(source) {
     return source.startsWith("/r/") || source.startsWith("/user/");
@@ -698,6 +807,7 @@ const SOURCE_TYPES = [
   MetMuseumSource,
   NasaSource,
   PexelsSource,
+  PiwigoSource,
   RedditSource,
   SynologyMomentsSource
 ];

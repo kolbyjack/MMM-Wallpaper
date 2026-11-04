@@ -122,6 +122,7 @@ config: {
 |`"json+http(s)://url"`|For any endpoint that returns a JSON list of images as `[{"url":"...","caption":"..."}]`|
 |`"lightroom:<user.myportfolio.com/album>"`|Cycles through random selections of the specified album.|
 |`"local:</path/to/directory>"`|Cycles through random selections of the images in the specified local directory.|
+|`"piwigo"` or `"piwigo:<base URL>"`|Cycles through images in the configured Piwigo category.|
 |`"synology-moments:<url>"`|Cycles through the latest images from the specified Synology moments album.|
 |`"/r/<subreddit>"`|Cycles through the most recent `hot` image posts from the subreddit.|
 |`"/user/<username>/m/<subreddit>"`|Cycles through the most recent `hot` image posts from the specified multireddit.|
@@ -147,6 +148,28 @@ flickr-api:
   * 1 call to `getSizes` per photo selected for display (at most `maximumEntries`); the results are cached for `flickrDataCacheTime`.
 * Very large images can consume excessive memory on the client. To prevent this, tune `maxWidth` and `maxHeight` to suit your display setup.
   * It is important to not set the limits too low! Photos with unusual aspect ratios can lead to a poor experience. We suggest about 1.5x your display resolution as a good starting point.
+
+piwigo:
+
+|Option|Default|Description|
+|---|---|---|
+|`piwigoBaseUrl`|URL in `source`, or `https://piwigo.org`|Base URL of the Piwigo gallery. Do not include a trailing slash.|
+|`piwigoCategory`|None|Category ID to retrieve images from.|
+|`piwigoUsername`|None|Piwigo username used to log in.|
+|`piwigoPassword`|None|Password for the Piwigo account.|
+|`piwigoApiKey`|None|Optional API key sent in the `Authorization` header, if required by the gallery.|
+
+Example:
+
+```javascript
+config: {
+  source: "piwigo:https://photos.example.com",
+  piwigoCategory: 12,
+  piwigoUsername: "wallpaper-reader",
+  piwigoPassword: "your-password",
+  piwigoApiKey: "your-api-key"
+}
+```
 
 |Source|Description|
 |---|---|
