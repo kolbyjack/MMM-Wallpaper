@@ -122,16 +122,16 @@ class ApodSource extends WallpaperSource {
 }
 
 class BingSource extends WallpaperSource {
+  static matches(source) {
+    return source === "bing";
+  }
+
   constructor(module, config, id) {
     super(module, config, id);
 
     const width = config.orientation === "vertical" ? 1080 : 1920;
     const height = config.orientation === "vertical" ? 1920 : 1080;
     this.suffix = `_${width}x${height}.jpg`;
-  }
-
-  static matches(source) {
-    return source === "bing";
   }
 
   fetch() {
@@ -175,14 +175,14 @@ class DirectUrlSource extends WallpaperSource {
 }
 
 class FireTvSource extends WallpaperSource {
+  static matches(source) {
+    return source === "firetv";
+  }
+
   constructor(module, config, id) {
     super(module, config, id);
 
     this.images = JSON.parse(fs.readFileSync(`${__dirname}/firetv.json`)).images;
-  }
-
-  static matches(source) {
-    return source === "firetv";
   }
 
   fetch() {
@@ -386,14 +386,14 @@ class JsonSource extends WallpaperSource {
 }
 
 class LightroomSource extends WallpaperSource {
+  static matches(source) {
+    return source.startsWith("lightroom:");
+  }
+
   constructor(module, config, id) {
     super(module, config, id);
 
     this.url = `https://${config.source.substring(10).trim()}`;
-  }
-
-  static matches(source) {
-    return source.startsWith("lightroom:");
   }
 
   fetch() {
@@ -468,14 +468,14 @@ class LocalSource extends WallpaperSource {
 }
 
 class MetMuseumSource extends WallpaperSource {
+  static matches(source) {
+    return source.startsWith("metmuseum:");
+  }
+
   constructor(module, config, id) {
     super(module, config, id);
 
     this.searchArgs = config.source.substring(10).split(",");
-  }
-
-  static matches(source) {
-    return source.startsWith("metmuseum:");
   }
 
   fetch() {
@@ -519,14 +519,14 @@ class MetMuseumSource extends WallpaperSource {
 }
 
 class NasaSource extends WallpaperSource {
+  static matches(source) {
+    return source.startsWith("nasa:");
+  }
+
   constructor(module, config, id) {
     super(module, config, id);
 
     this.searchTerm = config.source.split(":")[1];
-  }
-
-  static matches(source) {
-    return source.startsWith("nasa:");
   }
 
   fetch() {
@@ -676,9 +676,8 @@ class SynologyMomentsSource extends WallpaperSource {
       }
       return [];
     }
-    const data = JSON.parse(body);
 
-    return data.data.list.map(item => {
+    return JSON.parse(body).data.list.map(item => {
       this.imageMap[`/${item.id}`] = `${this.apiPath}?id=${item.id}&cache_key=${item.additional.thumbnail.cache_key}&type="unit"&size="xl"&api="SYNO.Photo.Thumbnail"&method="get"&version=1&_sharing_id="${this.album}"&passphrase="${this.album}"`;
       return { url: item.id };
     });
