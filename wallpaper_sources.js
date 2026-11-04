@@ -32,14 +32,19 @@ class WallpaperSource {
       params.headers["cache-control"] = "no-cache";
     }
 
-    fetch(params.url, params).then(response => response.text().then(body => {
+    return fetch(params.url, params).then(response => response.text().then(body => {
       const images = this.processResponse(body, response);
 
       if (Array.isArray(images) && images.length > 0) {
         this.cacheResult(images);
       }
-    }));
+    })).catch(error => {
+      console.error(`Wallpaper source request failed: ${error.message}`);
+      this.onRequestError(error);
+    });
   }
+
+  onRequestError() {}
 
   cacheResult(images) {
     if (Array.isArray(images) && (images.length > 0)) {
@@ -661,8 +666,9 @@ class SynologyMomentsSource extends WallpaperSource {
     }
 
     if (this.state === "create_session") {
-      if ("set-cookie" in response.headers) {
-        this.sessionCookie = response.headers["set-cookie"][0].split(";")[0];
+      const cookies = response.headers.getSetCookie();
+      if (cookies.length > 0) {
+        this.sessionCookie = cookies[0].split(";", 1)[0];
         this.state = "browse_item";
         this.request({
           method: "POST",
@@ -673,6 +679,8 @@ class SynologyMomentsSource extends WallpaperSource {
             "x-syno-sharing": this.album
           }
         });
+      } else {
+        console.error("Synology Moments response did not include a session cookie");
       }
       return [];
     }
