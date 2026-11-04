@@ -45,7 +45,7 @@ The following properties can be configured:
 
 |Option|Default|Description|
 |---|---|---|
-|`source`|`"bing"`|The image source to use.  See table below for supported sources.|
+|`source`|`"bing"`|The image source to use. See table below for supported sources. It can also be an array of sources, one of which is chosen at random for each update, or an object containing `source` and source-specific options.|
 |`caption`|`true`|Whether to display the image caption/attribution when available.|
 |`fadeEdges`|`false`|Whether to fade the top and bottom 10% of the image.|
 |`updateInterval`|`60 * 60 * 1000`|How often (in ms) to check the source for new wallpapers.|
@@ -63,6 +63,51 @@ The following properties can be configured:
 |`fillRegion`|`true`|Whether to fill the region where the module is positioned, or to add a div in the normal flow of the page.  When set to `false`, the `width` and `height` properties may be set to restrict the size of the module.|
 |`width`|`"auto"`|Width of the content when `fillRegion` is `false`.|
 |`height`|`"auto"`|Height of the content when `fillRegion` is `false`.|
+
+### Grouping source configuration
+
+Use an object for `source` to keep a source and its source-specific options together. The object's properties are merged into the module configuration and override matching top-level properties.
+
+```javascript
+config: {
+  source: {
+    source: "flickr-api:publicPhotos",
+    flickrApiKey: "your-api-key",
+    flickrResultsPerPage: 100
+  }
+}
+```
+
+You can also set `source` to an array. The module chooses one at random each time it requests updated wallpapers:
+
+```javascript
+config: {
+  source: [
+    "bing",
+    "firetv",
+    "chromecast",
+    {
+      source: "local:D:\\pictures"
+    },
+    {
+      source: "flickr-api:publicPhotos",
+      flickrApiKey: "your-api-key",
+      flickrResultsPerPage: 100
+    }
+  ]
+}
+```
+
+An object can group options with an array as well:
+
+```javascript
+config: {
+  source: {
+    source: ["bing", "firetv"],
+    maximumEntries: 12
+  }
+}
+```
 
 |Source|Description|
 |---|---|

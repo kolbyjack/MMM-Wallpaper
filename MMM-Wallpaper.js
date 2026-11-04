@@ -27,12 +27,12 @@ Module.register("MMM-Wallpaper", {
     fadeEdges: false,
   },
 
-  getStyles: function() {
+  getStyles() {
     return ["MMM-Wallpaper.css"];
   },
 
-  start: function() {
-    var self = this;
+  start() {
+    const self = this;
 
     self.loadNextImageTimer = null;
     self.imageIndex = -1;
@@ -72,8 +72,8 @@ Module.register("MMM-Wallpaper", {
     self.updateTimer = setInterval(() => self.getData(), self.config.updateInterval);
   },
 
-  notificationReceived: function(notification, payload, sender) {
-    var self = this;
+  notificationReceived(notification, payload, sender) {
+    const self = this;
 
     if (notification === "MODULE_DOM_CREATED" && self.config.userPresenceAction === "show") {
       self.hide();
@@ -100,45 +100,72 @@ Module.register("MMM-Wallpaper", {
     }
   },
 
-  socketNotificationReceived: function(notification, payload) {
-    var self = this;
+  socketNotificationReceived(notification, payload) {
+    const self = this;
 
-    if (notification === "WALLPAPERS") {
-      if (payload.orientation === self.getOrientation() &&
-          ((Array.isArray(self.config.source) && self.config.source.includes(payload.source)) ||
-           (!Array.isArray(self.config.source) && self.config.source === payload.source)))
-      {
-        self.images = payload.images.slice(0, self.config.maximumEntries);
-        self.imageIndex = self.imageIndex % (self.images.length || 1);
+    if ((notification === "WALLPAPERS") && self.notificationAppliesToUs(payload)) {
+      self.images = payload.images.slice(0, self.config.maximumEntries);
+      self.imageIndex = self.imageIndex % (self.images.length || 1);
 
-        if (self.imageElement === null && self.images.length > 0) {
-          self.loadNextImage();
-        }
+      if (self.imageElement === null && self.images.length > 0) {
+        self.loadNextImage();
       }
     }
   },
 
-  getData: function() {
-    var self = this;
-    var config = Object.assign({}, self.config);
+  notificationAppliesToUs(payload) {
+    const self = this;
+
+    if (payload.orientation !== self.getOrientation()) {
+      return false;
+    }
+
+    if (payload.source === self.config.source) {
+      return true;
+    }
+
+    if (Array.isArray(self.config.source)) {
+      for (let source of self.config.source) {
+        if ((payload.source === source) || ((typeof(source) === "object") && (payload.source === source.source))) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  },
+
+  getData() {
+    const self = this;
+    let config = Object.assign({}, self.config);
+
+    if (Array.isArray(config.source)) {
+      config.source = config.source[Math.floor(Math.random() * config.source.length)];
+    }
+
+    if ((config.source !== null) && (typeof(config.source) === "object") && (!Array.isArray(config.source))) {
+      const source = config.source;
+      delete config.source;
+      Object.assign(config, source);
+    }
 
     config.orientation = self.getOrientation();
     self.sendSocketNotification("FETCH_WALLPAPERS", config);
   },
 
-  getOrientation: function() {
-    var self = this;
+  getOrientation() {
+    const self = this;
 
     if (self.config.orientation === "auto") {
-      var viewport = self.getViewport();
+      const viewport = self.getViewport();
       return (viewport.width < viewport.height) ? "vertical" : "horizontal";
     }
 
     return self.config.orientation;
   },
 
-  onImageLoaded: function(imageData, element) {
-    var self = this;
+  onImageLoaded(imageData, element) {
+    const self = this;
 
     return () => {
       self.resetLoadImageTimer();
@@ -148,7 +175,7 @@ Module.register("MMM-Wallpaper", {
       self.title.style.display = "none";
 
       setTimeout(() => {
-        var caption = imageData.caption;
+        const caption = imageData.caption;
         if (self.config.caption && caption) {
           self.title.innerHTML = caption;
           self.title.style.display = "initial";
@@ -163,9 +190,9 @@ Module.register("MMM-Wallpaper", {
     };
   },
 
-  createImage: function(imageData) {
-    var self = this;
-    var img = document.createElement("img");
+  createImage(imageData) {
+    const self = this;
+    const img = document.createElement("img");
 
     img.style.filter = self.config.filter;
     img.style["object-fit"] = self.config.size;
@@ -176,14 +203,14 @@ Module.register("MMM-Wallpaper", {
     return img;
   },
 
-  getDom: function() {
+  getDom() {
     return this.wrapper;
   },
 
-  getViewport: function() {
-    var w = window;
-    var e = document.documentElement;
-    var g = document.body;
+  getViewport() {
+    const w = window;
+    const e = document.documentElement;
+    const g = document.body;
 
     return {
       width: w.innerWidth || e.clientWidth || g.clientWidth,
@@ -191,13 +218,13 @@ Module.register("MMM-Wallpaper", {
     };
   },
 
-  getImageUrl: function(image) {
-    var viewport = this.getViewport();
-    var url = image.url;
+  getImageUrl(image) {
+    const viewport = this.getViewport();
+    let url = image.url;
 
     if ("variants" in image) {
-      for (var i in image.variants) {
-        var variant = image.variants[i];
+      for (const i in image.variants) {
+        const variant = image.variants[i];
 
         if (variant.width > this.config.maxWidth || variant.height > this.config.maxHeight) {
           break;
@@ -214,16 +241,16 @@ Module.register("MMM-Wallpaper", {
     return url;
   },
 
-  loadNextImage: function() {
+  loadNextImage() {
     this.loadImage((this.imageIndex + 1) % this.images.length);
   },
 
-  loadPreviousImage: function() {
+  loadPreviousImage() {
     this.loadImage((this.imageIndex - 1 + this.images.length) % this.images.length);
   },
 
-  loadImage: function(index) {
-    var self = this;
+  loadImage(index) {
+    const self = this;
 
     self.resetLoadImageTimer();
 
@@ -242,7 +269,7 @@ Module.register("MMM-Wallpaper", {
     }
   },
 
-  resetLoadImageTimer: function() {
+  resetLoadImageTimer() {
     const self = this;
 
     if (self.config.slideInterval > 0) {

@@ -18,10 +18,6 @@ module.exports = NodeHelper.create({
   },
 
   fetchWallpapers(config) {
-    if (Array.isArray(config.source)) {
-      config.source = config.source[Math.floor(Math.random() * config.source.length)];
-    }
-
     const id = crypto.createHash("sha1").update(`${config.source}::${config.orientation}`).digest("hex");
     if (!(id in this.sources)) {
       this.sources[id] = createSource(this, config, id);
