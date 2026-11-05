@@ -149,6 +149,16 @@ flickr-api:
 * Very large images can consume excessive memory on the client. To prevent this, tune `maxWidth` and `maxHeight` to suit your display setup.
   * It is important to not set the limits too low! Photos with unusual aspect ratios can lead to a poor experience. We suggest about 1.5x your display resolution as a good starting point.
 
+|Source|Description|
+|---|---|
+|`publicPhotos`|Loads unfiltered public content.|
+|`tags/<tags>/<tagmode>`|Load public content matching the specified comma-separated tags.  `tagmode` can be `all` or `any` (default `all`).|
+|`photos/<username>`|Load public images from the user's photostream.|
+|`photos/<username>/galleries/<gallery id>`|Load public images from the user's specified gallery.|
+|`photos/<username>/favorites`|Load public images from the user's favorites.|
+|`photos/<username>/albums/<album id>`|Load public images from the user's specified album.
+|`groups/<groupname>`|Load public images from the group's pool.|
+
 piwigo:
 
 |Option|Default|Description|
@@ -170,16 +180,6 @@ config: {
   piwigoApiKey: "your-api-key"
 }
 ```
-
-|Source|Description|
-|---|---|
-|`publicPhotos`|Loads unfiltered public content.|
-|`tags/<tags>/<tagmode>`|Load public content matching the specified comma-separated tags.  `tagmode` can be `all` or `any` (default `all`).|
-|`photos/<username>`|Load public images from the user's photostream.|
-|`photos/<username>/galleries/<gallery id>`|Load public images from the user's specified gallery.|
-|`photos/<username>/favorites`|Load public images from the user's favorites.|
-|`photos/<username>/albums/<album id>`|Load public images from the user's specified album.
-|`groups/<groupname>`|Load public images from the group's pool.|
 
 http:// or https:// url:
 
