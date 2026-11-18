@@ -35,6 +35,7 @@ Module.register("MMM-Wallpaper", {
     const self = this;
 
     self.loadNextImageTimer = null;
+    self.slideTransitionTimer = null;
     self.imageIndex = -1;
 
     self.wrapper = document.createElement("div");
@@ -42,10 +43,6 @@ Module.register("MMM-Wallpaper", {
 
     self.content = document.createElement("div");
     self.wrapper.appendChild(self.content);
-
-    self.title = document.createElement("div");
-    self.title.className = "title";
-    self.content.appendChild(self.title);
 
     if (self.config.fadeEdges) {
       self.topGradient = document.createElement("div");
@@ -65,8 +62,8 @@ Module.register("MMM-Wallpaper", {
       self.content.style.height = self.config.height;
     }
 
-    self.imageElement = null;
-    self.nextImageElement = null;
+    self.currentSlide = null;
+    self.nextSlide = null;
 
     self.getData();
     self.updateTimer = setInterval(() => self.getData(), self.config.updateInterval);
@@ -107,7 +104,7 @@ Module.register("MMM-Wallpaper", {
       self.images = payload.images.slice(0, self.config.maximumEntries);
       self.imageIndex = self.imageIndex % (self.images.length || 1);
 
-      if (self.imageElement === null && self.images.length > 0) {
+      if (self.currentSlide === null && self.images.length > 0) {
         self.loadNextImage();
       }
     }
@@ -168,39 +165,66 @@ Module.register("MMM-Wallpaper", {
     const self = this;
 
     return () => {
+      if (self.nextSlide !== element) {
+        return;
+      }
+
       self.resetLoadImageTimer();
 
-      element.className = `wallpaper ${self.config.crossfade ? "crossfade-image" : ""}`;
+      const previousSlide = self.currentSlide;
+      element.className = `wallpaper-slide ${self.config.crossfade ? "crossfade-slide" : ""}`;
       element.style.opacity = 1;
-      self.title.style.display = "none";
 
-      setTimeout(() => {
-        const caption = imageData.caption;
-        if (self.config.caption && caption) {
-          self.title.innerHTML = caption;
-          self.title.style.display = "initial";
-        }
-
-        if (self.imageElement !== null) {
-          self.content.removeChild(self.imageElement);
-        }
-        self.imageElement = self.nextImageElement;
-        self.nextImageElement = null;
-      }, self.config.crossfade ? 1000 : 0);
+      if (previousSlide === null) {
+        self.currentSlide = element;
+        self.nextSlide = null;
+      } else if (self.config.crossfade) {
+        previousSlide.style.opacity = 0;
+        self.slideTransitionTimer = setTimeout(() => self.promoteSlide(previousSlide, element), 1000);
+      } else {
+        self.promoteSlide(previousSlide, element);
+      }
     };
   },
 
-  createImage(imageData) {
+  promoteSlide(previousSlide, nextSlide) {
     const self = this;
-    const img = document.createElement("img");
 
+    if (self.nextSlide !== nextSlide) {
+      return;
+    }
+
+    if (previousSlide && previousSlide.parentNode === self.content) {
+      self.content.removeChild(previousSlide);
+    }
+
+    self.currentSlide = nextSlide;
+    self.nextSlide = null;
+    self.slideTransitionTimer = null;
+  },
+
+  createSlide(imageData) {
+    const self = this;
+    const slide = document.createElement("div");
+    slide.className = "wallpaper-slide crossfade-slide";
+    slide.style.opacity = 0;
+
+    const img = document.createElement("img");
+    img.className = "wallpaper";
     img.style.filter = self.config.filter;
     img.style["object-fit"] = self.config.size;
-    img.style.opacity = 0;
-    img.onload = self.onImageLoaded(imageData, img);
+    img.onload = self.onImageLoaded(imageData, slide);
     img.src = self.getImageUrl(imageData);
+    slide.appendChild(img);
 
-    return img;
+    if (self.config.caption && imageData.caption) {
+      const caption = document.createElement("div");
+      caption.className = "title";
+      caption.innerHTML = imageData.caption;
+      slide.appendChild(caption);
+    }
+
+    return slide;
   },
 
   getDom() {
@@ -254,18 +278,33 @@ Module.register("MMM-Wallpaper", {
 
     self.resetLoadImageTimer();
 
-    if (self.nextImageElement !== null) {
-      self.nextImageElement.onload = null;
-      self.content.removeChild(self.nextImageElement);
-      self.nextImageElement = null;
+    if (self.slideTransitionTimer !== null) {
+      clearTimeout(self.slideTransitionTimer);
+      self.slideTransitionTimer = null;
+    }
+
+    if (self.nextSlide !== null) {
+      const image = self.nextSlide.querySelector("img");
+      if (image.complete && image.naturalWidth > 0) {
+        if (self.currentSlide && self.currentSlide.parentNode === self.content) {
+          self.content.removeChild(self.currentSlide);
+        }
+        self.currentSlide = self.nextSlide;
+      } else {
+        image.onload = null;
+        if (self.nextSlide.parentNode === self.content) {
+          self.content.removeChild(self.nextSlide);
+        }
+      }
+      self.nextSlide = null;
     }
 
     self.imageIndex = index;
 
     const nextImageData = self.images[self.imageIndex];
     if (nextImageData !== null) {
-      self.nextImageElement = self.createImage(nextImageData);
-      self.content.insertBefore(self.nextImageElement, self.title);
+      self.nextSlide = self.createSlide(nextImageData);
+      self.content.insertBefore(self.nextSlide, self.content.firstChild);
     }
   },
 

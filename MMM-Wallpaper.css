@@ -1,10 +1,11 @@
 .MMM-Wallpaper .content {
   background: #000;
-  display: flex;
+  display: grid;
 }
 
 .MMM-Wallpaper .content-fill {
   background: #000;
+  display: grid;
   position: absolute;
   top: 0px;
   left: 0px;
@@ -12,20 +13,29 @@
   bottom: 0px;
 }
 
+.MMM-Wallpaper .wallpaper-slide {
+  grid-area: 1 / 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 .MMM-Wallpaper .wallpaper {
+  display: block;
   margin: auto;
   width: 100%;
   height: 100%;
 }
 
-.MMM-Wallpaper .crossfade-image {
+.MMM-Wallpaper .crossfade-slide {
   transition: opacity 1s ease-in-out;
 }
 
-.MMM-Wallpaper .title {
+.MMM-Wallpaper .wallpaper-slide .title {
   position: absolute;
   right: 25px;
   bottom: 25px;
+  text-align: right;
   font-family: Roboto, sans-serif;
   font-weight: 100;
   font-size: 14px;
