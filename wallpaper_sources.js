@@ -591,6 +591,148 @@ class PexelsSource extends WallpaperSource {
   }
 }
 
+class PiwigoSource extends WallpaperSource {
+  static matches(source) {
+    return (source === "piwigo") || (source.startsWith("piwigo:"));
+  }
+
+  constructor(module, config, id) {
+    super(module, config, id);
+
+    if (!(this.config.piwigoUsername && this.config.piwigoPassword && this.config.piwigoCategory)) {
+      console.error("Piwigo source requires piwigoUsername, piwigoPassword, and piwigoCategory");
+      this.state = "invalid";
+      return;
+    }
+
+    let baseUrl = this.config.piwigoBaseUrl.trim();
+    if ((!baseUrl) && this.config.source.startsWith("piwigo:")) {
+      baseUrl = this.config.source.substring(7).trim();
+    }
+    if (!baseUrl) {
+      baseUrl = "https://piwigo.org";
+    }
+
+    this.apiUrl = `${baseUrl.replace(/\/+$/, "")}/ws.php`;
+    this.state = "idle";
+  }
+
+  fetch() {
+    if (this.state !== "idle") {
+      return;
+    }
+
+    const username = encodeURIComponent(this.config.piwigoUsername);
+    const password = encodeURIComponent(this.config.piwigoPassword);
+
+    this.state = "create_session";
+    const headers = {
+      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+    };
+    if (this.config.piwigoApiKey) {
+      headers.Authorization = this.config.piwigoApiKey;
+    }
+
+    this.request({
+      method: "POST",
+      url: this.apiUrl,
+      headers,
+      body: `method=pwg.session.login&username=${username}&password=${password}&format=json`,
+    });
+  }
+
+  parseCookies(response) {
+    const cookies = response.headers.getSetCookie();
+    const sessionCookie = cookies.slice().reverse().find(cookie => cookie.startsWith("pwg_id="));
+    return sessionCookie ? sessionCookie.split(";", 1)[0] : null;
+  }
+
+  onRequestError() {
+    this.state = "idle";
+  }
+
+  processResponse(body, response) {
+    if (response.status !== 200) {
+      console.error(`ERROR: ${response.status} -- ${body}`);
+    } else if (this.state === "create_session") {
+      return this.onSessionCreated(body, response);
+    } else if (this.state === "fetching_images") {
+      return this.onImagesRetrieved(body, response);
+    } else {
+      console.error(`ERROR: Unexpected state: ${this.state}`);
+    }
+
+    this.state = "idle";
+    return [];
+  }
+
+  onSessionCreated(body, response) {
+    let session;
+    try {
+      session = JSON.parse(body);
+    } catch (error) {
+      console.error(`Piwigo returned invalid login JSON: ${error.message}`);
+      this.state = "idle";
+      return [];
+    }
+    if (session.stat !== "ok") {
+      console.error(`Piwigo login failed: ${session.message || session.stat || "unknown error"}`);
+      this.state = "idle";
+      return [];
+    }
+
+    this.sessionCookie = this.parseCookies(response);
+    if (!this.sessionCookie) {
+      console.error("Piwigo login response did not include a session cookie");
+      this.state = "idle";
+      return [];
+    }
+
+    let requestBody = `method=pwg.categories.getImages&cat_id=${this.config.piwigoCategory}&per_page=${this.config.maximumEntries}&format=json`;
+    if (this.config.shuffle) {
+      requestBody += "&order=random";
+    }
+
+    this.state = "fetching_images";
+    this.request({
+      method: "POST",
+      url: this.apiUrl,
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        Cookie: this.sessionCookie
+      },
+      body: requestBody,
+    });
+  }
+
+  onImagesRetrieved(body) {
+    this.state = "idle";
+    const response = JSON.parse(body);
+    if (response.stat !== "ok" || !response.result || !Array.isArray(response.result.images)) {
+      console.error(`Piwigo image request failed: ${response.message || response.stat || "invalid response"}`);
+      return [];
+    }
+
+    return response.result.images.filter(item => item.derivatives && item.derivatives.large && item.derivatives.large.url).map(item => {
+      const caption = [];
+      if (item.name && (item.name !== item.file)) {
+        caption.push(item.name);
+      }
+      if (item.comment) {
+        caption.push(item.comment);
+      }
+      if (item.date_creation) {
+        caption.push(item.date_creation);
+      }
+      return {
+        url: item.derivatives.large.url,
+        caption: caption.join(" ")
+      };
+    });
+  }
+}
+
 class RedditSource extends WallpaperSource {
   static matches(source) {
     return source.startsWith("/r/") || source.startsWith("/user/");
@@ -727,6 +869,7 @@ const SOURCE_TYPES = [
   MetMuseumSource,
   NasaSource,
   PexelsSource,
+  PiwigoSource,
   RedditSource,
   SynologyMomentsSource
 ];
