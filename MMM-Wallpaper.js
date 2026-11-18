@@ -11,6 +11,7 @@ Module.register("MMM-Wallpaper", {
     orientation: "auto",
     caption: true,
     crossfade: true,
+    kenBurnsEffect: false,
     maxWidth: Number.MAX_SAFE_INTEGER,
     maxHeight: Number.MAX_SAFE_INTEGER,
     nsfw: true,
@@ -172,6 +173,9 @@ Module.register("MMM-Wallpaper", {
       self.resetLoadImageTimer();
 
       const previousSlide = self.currentSlide;
+      if (self.config.kenBurnsEffect) {
+        self.applyKenBurns(element);
+      }
       element.className = `wallpaper-slide ${self.config.crossfade ? "crossfade-slide" : ""}`;
       element.style.opacity = 1;
 
@@ -201,6 +205,18 @@ Module.register("MMM-Wallpaper", {
     self.currentSlide = nextSlide;
     self.nextSlide = null;
     self.slideTransitionTimer = null;
+  },
+
+  applyKenBurns(slide) {
+    const image = slide.querySelector(".wallpaper");
+    const origins = ["top left", "top right", "bottom left", "bottom right"];
+    const origin = origins[Math.floor(Math.random() * origins.length)];
+    const duration = this.config.slideInterval > 0 ? this.config.slideInterval : 30000;
+
+    image.style.setProperty("--ken-burns-origin", origin);
+    image.style.setProperty("--ken-burns-duration", `${duration}ms`);
+    image.classList.add("ken-burns-image");
+    image.classList.add(Math.random() < 0.5 ? "ken-burns-zoom-in" : "ken-burns-zoom-out");
   },
 
   createSlide(imageData) {

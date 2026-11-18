@@ -15,6 +15,7 @@
 
 .MMM-Wallpaper .wallpaper-slide {
   grid-area: 1 / 1;
+  overflow: hidden;
   position: relative;
   width: 100%;
   height: 100%;
@@ -25,6 +26,36 @@
   margin: auto;
   width: 100%;
   height: 100%;
+}
+
+.MMM-Wallpaper .ken-burns-image {
+  transform-origin: var(--ken-burns-origin);
+}
+
+.MMM-Wallpaper .ken-burns-zoom-in {
+  animation: kenBurnsZoomIn var(--ken-burns-duration) ease-in-out forwards;
+}
+
+.MMM-Wallpaper .ken-burns-zoom-out {
+  animation: kenBurnsZoomOut var(--ken-burns-duration) ease-in-out forwards;
+}
+
+@keyframes kenBurnsZoomIn {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.2);
+  }
+}
+
+@keyframes kenBurnsZoomOut {
+  from {
+    transform: scale(1.2);
+  }
+  to {
+    transform: scale(1);
+  }
 }
 
 .MMM-Wallpaper .crossfade-slide {
