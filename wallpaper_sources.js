@@ -443,14 +443,29 @@ class LocalSource extends WallpaperSource {
   constructor(module, config, id) {
     super(module, config, id);
 
-    this.sourcePath = config.source.substring(6).trim();
-    this.requestHandler = express.static(this.sourcePath);
+    this.sourcePaths = config.source.substring(6).split(";").map(sourcePath => sourcePath.trim()).filter(sourcePath => sourcePath.length > 0);
+    this.staticHandlers = this.sourcePaths.map(sourcePath => express.static(sourcePath));
+    this.requestHandler = (request, response, next) => {
+      const parts = request.url.split("/");
+      const sourceIndex = Number.parseInt(parts[1], 10);
+
+      if (!Number.isInteger(sourceIndex) || sourceIndex < 0 || sourceIndex >= this.staticHandlers.length) {
+        return next();
+      }
+
+      const originalUrl = request.url;
+      request.url = `/${parts.slice(2).join("/")}`;
+      return this.staticHandlers[sourceIndex](request, response, error => {
+        request.url = originalUrl;
+        next(error);
+      });
+    };
   }
 
   fetch() {
-    const fileMatcher = /\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/;
+    const fileMatcher = /\.(?:a?png|avif|gif|p?jpe?g|jfif|pjp|svg|webp|bmp)$/i;
 
-    const getFiles = async (dir, prefix) => {
+    const getFiles = async (dir, dirIndex, prefix) => {
       const dirents = await fs.promises.readdir(dir, { withFileTypes: true });
       let images = [];
 
@@ -458,17 +473,23 @@ class LocalSource extends WallpaperSource {
         const entpath = path.resolve(dir, dirent.name);
 
         if (dirent.isDirectory() && this.config.recurseLocalDirectories) {
-          images = images.concat(await getFiles(entpath, `${prefix}${dirent.name}/`));
+          images = images.concat(await getFiles(entpath, dirIndex, `${prefix}${dirent.name}/`));
         } else if (dirent.isFile() && dirent.name.toLowerCase().match(fileMatcher) !== null) {
-          images.push({ url: `${prefix}${dirent.name}`, caption: entpath });
+          images.push({ url: `${dirIndex}/${prefix}${dirent.name}`, caption: entpath });
         }
       }
       return images;
     };
 
-    getFiles(this.sourcePath, "/").then(images => {
-      this.cacheResult(this.config.shuffle ? this.shuffle(images) : images);
-    });
+    Promise.all(this.sourcePaths.map((sourcePath, dirIndex) => getFiles(sourcePath, dirIndex, "").catch(error => {
+      console.error(`Failed to read local wallpaper directory ${sourcePath}: ${error.message}`);
+      return [];
+    })))
+      .then(results => {
+        const images = results.flat();
+        this.cacheResult(this.config.shuffle ? this.shuffle(images) : images);
+      })
+      .catch(error => console.error(`Failed to load local wallpaper directories: ${error.message}`));
   }
 }
 

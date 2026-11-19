@@ -171,6 +171,8 @@ local:
 |---|---|---|
 |`"recurseLocalDirectories"`|`false`|Whether to recurse into subdirectories when looking for images.|
 
+You can specify multiple local directories by separating their paths with semicolons, for example `local:/path/to/photos;/path/to/favorites`. Images are loaded from each directory. Set `recurseLocalDirectories` to `true` to include images in their subdirectories.
+
 ## Notifications
 
 MMM-Wallpaper can react to the following notifications sent by other modules:
